@@ -1,4 +1,4 @@
-# bookstack-viewer
+# A bookstack-viewer by AI and ME
 
 Bookstack viewer was created to fetch data from multiple bookstack instances and publish the data in a
 controlled way where users must login via their email address. When entering the email address the

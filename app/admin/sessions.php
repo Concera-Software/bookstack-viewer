@@ -52,6 +52,7 @@ if (($_SERVER["REQUEST_METHOD"] ?? "GET") === "POST") {
         exit();
     }
 
+
     if ($action === "block_ip") {
         $ip = trim((string)($_POST["ip_address"] ?? ""));
         $reason = trim((string)($_POST["reason"] ?? "Blocked from admin session manager"));
@@ -161,7 +162,7 @@ if (!$sessions) {
             $content .= '<form method="post" class="inline-admin-form">';
             $content .= '<input type="hidden" name="action" value="revoke_session">';
             $content .= '<input type="hidden" name="session_id" value="' . e($sessionId) . '">';
-            $content .= '<button type="submit" class="danger-button">Stop session</button>';
+            $content .= '<button type="submit" class="danger-button">Log off</button>';
             $content .= '</form>';
         }
 

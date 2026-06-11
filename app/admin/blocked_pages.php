@@ -76,49 +76,60 @@ header("X-Robots-Tag: noindex, nofollow, noarchive", true);
 
 $rows = [];
 
+$filter = trim((string)($_GET["type"] ?? "all"));
+
+if (!in_array($filter, ["all", "hard", "soft"], true)) {
+    $filter = "all";
+}
+
 /*
  * Soft-hidden pages from the database.
  */
-$stmt = $pdo->query("
-    SELECT
-        d.id,
-        d.source_key,
-        d.source_page_id,
-        d.book_name,
-        d.book_slug,
-        d.chapter_name,
-        d.page_name,
-        d.page_slug,
-        d.url_path,
-        d.updated_at,
-        e.excluded,
-        e.updated_at AS hidden_updated_at,
-        e.updated_by_ip
-    FROM public_doc_exclusions e
-    INNER JOIN public_docs d
-        ON d.source_key = e.source_key
-       AND d.source_page_id = e.source_page_id
-    WHERE e.excluded = 1
-    ORDER BY
-        d.book_name ASC,
-        d.chapter_name ASC,
-        d.page_name ASC
-");
+if ($filter === "all" || $filter === "soft") {
+    /*
+     * Soft-hidden pages from the database.
+     */
+    $stmt = $pdo->query("
+        SELECT
+            d.id,
+            d.source_key,
+            d.source_page_id,
+            d.book_name,
+            d.book_slug,
+            d.chapter_name,
+            d.page_name,
+            d.page_slug,
+            d.url_path,
+            d.updated_at,
+            e.excluded,
+            e.updated_at AS hidden_updated_at,
+            e.updated_by_ip
+        FROM public_doc_exclusions e
+        INNER JOIN public_docs d
+            ON d.source_key = e.source_key
+           AND d.source_page_id = e.source_page_id
+        WHERE e.excluded = 1
+        ORDER BY
+            d.book_name ASC,
+            d.chapter_name ASC,
+            d.page_name ASC
+    ");
 
-foreach ($stmt->fetchAll() as $row) {
-    $rows[] = [
-        "type" => "Soft hidden",
-        "source_key" => (string)($row["source_key"] ?? ""),
-        "source_page_id" => (int)($row["source_page_id"] ?? 0),
-        "book_name" => (string)($row["book_name"] ?? ""),
-        "book_slug" => (string)($row["book_slug"] ?? ""),
-        "chapter_name" => (string)($row["chapter_name"] ?? ""),
-        "page_name" => (string)($row["page_name"] ?? ""),
-        "page_slug" => (string)($row["page_slug"] ?? ""),
-        "url_path" => (string)($row["url_path"] ?? ""),
-        "updated_at" => (string)($row["hidden_updated_at"] ?? $row["updated_at"] ?? ""),
-        "updated_by_ip" => (string)($row["updated_by_ip"] ?? ""),
-    ];
+    foreach ($stmt->fetchAll() as $row) {
+        $rows[] = [
+            "type" => "Soft hidden",
+            "source_key" => (string)($row["source_key"] ?? ""),
+            "source_page_id" => (int)($row["source_page_id"] ?? 0),
+            "book_name" => (string)($row["book_name"] ?? ""),
+            "book_slug" => (string)($row["book_slug"] ?? ""),
+            "chapter_name" => (string)($row["chapter_name"] ?? ""),
+            "page_name" => (string)($row["page_name"] ?? ""),
+            "page_slug" => (string)($row["page_slug"] ?? ""),
+            "url_path" => (string)($row["url_path"] ?? ""),
+            "updated_at" => (string)($row["hidden_updated_at"] ?? $row["updated_at"] ?? ""),
+            "updated_by_ip" => (string)($row["updated_by_ip"] ?? ""),
+        ];
+    }
 }
 
 /*
@@ -127,7 +138,8 @@ foreach ($stmt->fetchAll() as $row) {
  * These are normally hidden for everyone, including admin IPs, but this page
  * lists them for administrative visibility.
  */
-foreach (($config["bookstack_sources"] ?? []) as $source) {
+if ($filter === "all" || $filter === "hard") {
+  foreach (($config["bookstack_sources"] ?? []) as $source) {
     if (!is_array($source)) {
         continue;
     }
@@ -194,6 +206,7 @@ foreach (($config["bookstack_sources"] ?? []) as $source) {
             ];
         }
     }
+  }
 }
 
 $content = '<article class="doc-page">';
@@ -201,12 +214,15 @@ $content .= '<h1>Hidden and blocked pages</h1>';
 $content .= '<p class="lead">This admin-only overview lists pages hidden from normal visitors or blocked by configuration.</p>';
 
 $content .= '<div class="admin-filter-bar">';
+$content .= '<form class="admin-filter-bar" method="get" action="/admin/hidden-pages">';
 $content .= '<label for="adminHiddenFilter"><strong>Filter:</strong></label>';
-$content .= '<select id="adminHiddenFilter" class="admin-hidden-filter">';
-$content .= '<option value="all">All hidden and blocked pages</option>';
-$content .= '<option value="hard">Hard blocked pages only</option>';
-$content .= '<option value="soft">Soft hidden pages only</option>';
+$content .= '<select id="adminHiddenFilter" name="type" class="admin-hidden-filter" onchange="this.form.submit()">';
+$content .= '<option value="all"' . ($filter === "all" ? " selected" : "") . '>All hidden and blocked pages</option>';
+$content .= '<option value="hard"' . ($filter === "hard" ? " selected" : "") . '>Hard blocked pages only</option>';
+$content .= '<option value="soft"' . ($filter === "soft" ? " selected" : "") . '>Soft hidden pages only</option>';
 $content .= '</select>';
+$content .= '<noscript><button type="submit">Apply</button></noscript>';
+$content .= '</form>';
 $content .= '</div>';
 
 if (!$rows) {
@@ -284,30 +300,6 @@ if (!$rows) {
 }
 
 $content .= '</article>';
-
-$content .= <<<HTML
-<script>
-(function () {
-    const filter = document.getElementById("adminHiddenFilter");
-
-    if (!filter) {
-        return;
-    }
-
-    const items = document.querySelectorAll("[data-admin-hidden-type]");
-
-    filter.addEventListener("change", function () {
-        const value = filter.value;
-
-        items.forEach(function (item) {
-            const type = item.getAttribute("data-admin-hidden-type");
-
-            item.hidden = value !== "all" && type !== value;
-        });
-    });
-})();
-</script>
-HTML;
 
 $treePages = [];
 

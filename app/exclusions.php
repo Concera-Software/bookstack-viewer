@@ -206,9 +206,12 @@ function current_verified_access_email(): string
 /**
  * Check whether the current visitor may access admin pages.
  *
- * Admin access requires both:
- * - allowed admin IP
- * - verified access-gate email listed in admin_emails
+ * Admin access requires:
+ * - verified access-gate email
+ * - allowed IP address
+ *
+ * Database admin users overrule app/config.php when a DB record exists
+ * for the current verified email address.
  *
  * @param array $config
  * @param ?string $sourceKey
@@ -216,17 +219,41 @@ function current_verified_access_email(): string
  */
 function can_access_admin_pages(array $config, ?string $sourceKey = null): bool
 {
-    if (!can_manage_page_exclusions($config, $sourceKey)) {
-        return false;
-    }
-
     $email = current_verified_access_email();
 
     if ($email === '') {
         return false;
     }
 
-    return in_array($email, admin_email_addresses($config), true);
+    $clientIp = client_ip_address();
+
+    if ($clientIp === '') {
+        return false;
+    }
+
+    /**
+     * DB admin users overrule app/config.php for the same email.
+     */
+    if (
+        isset($GLOBALS['pdo']) &&
+        $GLOBALS['pdo'] instanceof PDO &&
+        function_exists('admin_user_db_access_decision')
+    ) {
+        $dbDecision = admin_user_db_access_decision($GLOBALS['pdo'], $email, $clientIp);
+
+        if ($dbDecision !== null) {
+            return $dbDecision;
+        }
+    }
+
+    /**
+     * Fallback to app/config.php only if no DB admin-user record exists.
+     */
+    if (!in_array($email, admin_email_addresses($config), true)) {
+        return false;
+    }
+
+    return can_manage_page_exclusions($config, $sourceKey);
 }
 
 /**

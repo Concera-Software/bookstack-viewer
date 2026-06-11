@@ -128,6 +128,25 @@ function admin_tree_pages(array $config): array
     }
 
     return [
+[
+    'id' => -900000,
+    'source_key' => 'admin',
+    'source_page_id' => 0,
+    'page_name' => 'Admin',
+    'page_slug' => 'admin',
+    'book_id' => -900001,
+    'book_name' => 'Admin',
+    'book_slug' => 'admin',
+    'book_url' => '/admin',
+    'chapter_id' => -900001,
+    'chapter_name' => 'Administration',
+    'chapter_slug' => 'administration',
+    'url_path' => '/admin',
+    'html' => '',
+    'text_content' => '',
+    'description' => 'Admin overview.',
+    'updated_at' => '',
+],
         [
             'id' => -900001,
             'source_key' => 'admin',
@@ -164,6 +183,26 @@ function admin_tree_pages(array $config): array
     'html' => '',
     'text_content' => '',
     'description' => 'Admin session management.',
+    'updated_at' => '',
+],
+
+[
+    'id' => -900003,
+    'source_key' => 'admin',
+    'source_page_id' => 0,
+    'page_name' => 'Admin users',
+    'page_slug' => 'admin-users',
+    'book_id' => -900001,
+    'book_name' => 'Admin',
+    'book_slug' => 'admin',
+    'book_url' => '/admin',
+    'chapter_id' => -900001,
+    'chapter_name' => 'Administration',
+    'chapter_slug' => 'administration',
+    'url_path' => '/admin/users',
+    'html' => '',
+    'text_content' => '',
+    'description' => 'Manage admin users.',
     'updated_at' => '',
 ],
 

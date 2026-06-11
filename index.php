@@ -16,6 +16,7 @@ require __DIR__ . "/app/link_rewriter.php";
 
 // admin includes
 require __DIR__ . "/app/admin/session_management.php";
+require __DIR__ . "/app/admin/admin_users.php";
 
 redirect_to_base_url_if_needed($config);
 access_gate_start_session($config);
@@ -108,6 +109,10 @@ if ($path === "/access/verify-code") {
  *
  * Shows all soft-hidden pages and hard-blocked pages for admin IPs only.
  */
+if ($path === "/admin") {
+    require __DIR__ . "/app/admin/index.php";
+}
+
 if ($path === "/admin/hidden-pages") {
     require __DIR__ . "/app/admin/blocked_pages.php";
 }
@@ -116,6 +121,9 @@ if ($path === "/admin/sessions") {
     require __DIR__ . "/app/admin/sessions.php";
 }
 
+if ($path === "/admin/users") {
+    require __DIR__ . "/app/admin/users.php";
+}
 
 
 /*
@@ -321,6 +329,18 @@ if ($path === "/") {
             $html .= "</article>";
         }
 
+$showAdminTile =
+    function_exists("can_access_admin_pages") &&
+    can_access_admin_pages($config, null);
+
+if ($showAdminTile) {
+    $html .= '<article class="book-card admin-book-card">';
+    $html .= '<h2><a href="/admin">Admin</a></h2>';
+    $html .= '<p>2 admin modules</p>';
+    $html .= '<span class="card-meta">Session management and hidden page controls</span>';
+    $html .= '</article>';
+}
+
         $html .= "</section>";
     }
 
@@ -331,7 +351,9 @@ if ($path === "/") {
         $html,
         "/"
     );
+
     exit();
+
 }
 
 /**

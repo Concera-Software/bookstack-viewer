@@ -1,4 +1,4 @@
-/* version 1.0.3 */
+/* version 1.0.4 */
 
 :root {
     --bg: #f4f6f8;
@@ -1220,8 +1220,8 @@ html {
 }
 
 .hidden-page-label-hard {
-    background: #fca5a5 !important;
-    border: 1px solid #fca5a5 !important;
+    background: #991b1b !important;
+    border: 1px solid #991b1b !important;
     color: #ffffff !important;
 }
 
@@ -1400,4 +1400,76 @@ body,
 .danger-button:hover {
     background: #7f1d1d;
     border-color: #450a0a;
+}
+
+.admin-book-card {
+    border-color: #7f1d1d !important;
+}
+
+.admin-book-card h2 a {
+    color: #7f1d1d;
+}
+
+/* Admin users */
+
+.admin-user-form {
+    display: grid;
+    gap: 1rem;
+    max-width: 760px;
+    margin: 1rem 0 2rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel-soft);
+}
+
+.admin-form-field {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.admin-form-field span,
+.admin-check-field span {
+    font-weight: 700;
+    color: var(--heading);
+}
+
+.admin-form-field input,
+.admin-form-field textarea,
+.admin-inline-form input,
+.admin-inline-form textarea {
+    width: 100%;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 0.65rem 0.75rem;
+    font: inherit;
+    background: #ffffff;
+}
+
+.admin-check-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-ip-list {
+    margin: 0;
+    white-space: pre-wrap;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-family: inherit;
+}
+
+.admin-inline-editor summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.admin-inline-form {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    min-width: 260px;
 }

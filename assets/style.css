@@ -1199,6 +1199,35 @@ html {
     display: none;
 }
 
+.admin-hidden-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+    font-size: 0.92rem;
+}
+
+.admin-hidden-table th,
+.admin-hidden-table td {
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid #d9e2ec;
+    text-align: left;
+    vertical-align: top;
+}
+
+.admin-hidden-table th {
+    background: #f4f7fa;
+    font-weight: 700;
+}
+
+.admin-hidden-table tr.is-hard-blocked td:first-child strong {
+    color: #b42318;
+}
+
+.admin-hidden-table tr.is-soft-hidden td:first-child strong {
+    color: #b54708;
+}
+
+
 /* Layout cleanup requested 2026-06-10 */
 
 /* 1. Make the documentation menu light grey */

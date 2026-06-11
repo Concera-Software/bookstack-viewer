@@ -62,6 +62,15 @@ if ($path === "/access/verify-code") {
     ]);
 }
 
+/**
+ * Route: Admin hidden/blocked pages overview.
+ *
+ * Shows all soft-hidden pages and hard-blocked pages for admin IPs only.
+ */
+if ($path === "/admin/hidden-pages") {
+	require __DIR__ . "/admin/admin_blockedpages.php";
+}
+
 /*
  * Page cache only after access/admin/asset routes are handled.
  */
@@ -628,9 +637,9 @@ if (preg_match('#^/books/([^/]+)$#', $path, $match)) {
         $content .= "<strong>";
         $content .= e($page["page_name"]);
 
-        if ($sourcePageId > 0) {
-            $content .= " <small>#" . e((string) $sourcePageId) . "</small>";
-        }
+//        if ($sourcePageId > 0) {
+//            $content .= " <small>#" . e((string) $sourcePageId) . "</small>";
+//        }
 
         if ($isHidden) {
             $content .= ' <span class="hidden-page-label">Hidden</span>';

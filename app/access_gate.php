@@ -143,6 +143,35 @@ function access_gate_start_session(array $config): void
     $sessionDays = max(1, (int)($config['access_gate_session_days'] ?? 7));
     $lifetime = $sessionDays * 86400;
 
+    session_cache_limiter('');
+
+    session_set_cookie_params([
+        'lifetime' => $lifetime,
+        'path' => '/',
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+
+    session_start();
+}
+
+
+/**
+ * Start the access-gate session.
+ *
+ * @param array $config
+ * @return void
+ */
+function access_gate_start_session_depricated1(array $config): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        return;
+    }
+
+    $sessionDays = max(1, (int)($config['access_gate_session_days'] ?? 7));
+    $lifetime = $sessionDays * 86400;
+
     session_set_cookie_params([
         'lifetime' => $lifetime,
         'path' => '/',
@@ -873,8 +902,8 @@ function access_gate_send_email_code(string $email, string $code, array $config,
     $appName = (string)($config['app_name'] ?? 'CoCoS Manual');
 
     $subject = 'Your access code for ' . $appName;
-
     $magicLink = null;
+    $bcc = trim((string)($config['access_gate_mail_bcc'] ?? ''));
 
     if ($magicToken !== null && $baseUrl !== '') {
         $magicLink = $baseUrl . '/access/magic-login?token=' . rawurlencode($magicToken);
@@ -906,7 +935,8 @@ function access_gate_send_email_code(string $email, string $code, array $config,
         $email,
         $subject,
         $textBody,
-        $htmlBody
+        $htmlBody,
+	$bcc
     );
 }
 

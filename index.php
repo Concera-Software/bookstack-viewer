@@ -12,6 +12,7 @@ require __DIR__ . "/app/access_gate.php";
 require __DIR__ . "/app/exclusions.php";
 require __DIR__ . "/app/page_repository.php";
 require __DIR__ . "/app/asset_proxy.php";
+require __DIR__ . "/app/link_rewriter.php";
 
 redirect_to_base_url_if_needed($config);
 access_gate_start_session($config);
@@ -749,11 +750,17 @@ if (preg_match('#^/books/([^/]+)/page/([^/]+)$#', $path, $match)) {
         58
     );
 
+
 $pageHtml = add_heading_ids($page["html"] ?? "");
+
+if (function_exists("rewrite_bookstack_page_links")) {
+    $pageHtml = rewrite_bookstack_page_links($pdo, $pageHtml, $page, $config);
+}
 
 if (function_exists("asset_proxy_rewrite_html")) {
     $pageHtml = asset_proxy_rewrite_html($pageHtml, $page, $config);
 }
+
 
 $activeHeadings = extract_headings($pageHtml);
 

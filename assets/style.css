@@ -748,6 +748,20 @@ body.access-gate-active .doc-page {
     filter: blur(2px);
 }
 
+body.access-overlay-disabled .page-shell,
+body.access-overlay-disabled .content,
+body.access-overlay-disabled .doc-split,
+body.access-overlay-disabled .doc-view {
+    filter: none !important;
+    pointer-events: auto !important;
+    user-select: auto !important;
+}
+
+body.access-overlay-disabled::before,
+body.access-overlay-disabled::after {
+    display: none !important;
+}
+
 .access-card {
     width: min(440px, 100%);
     background: #ffffff;

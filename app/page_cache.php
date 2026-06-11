@@ -165,11 +165,14 @@ function page_cache_start(array $config, string $path): void
       $statusCode = http_response_code();
       $lowerHtml = strtolower($html);
 
+      $hasAccessOverlay =
+        str_contains($lowerHtml, 'id="accessoverlay"') ||
+        str_contains($lowerHtml, "id='accessoverlay'");
+
       if (
         ($statusCode === 200 || $statusCode === false) &&
         str_contains($lowerHtml, '<!doctype html>') &&
-        !str_contains($lowerHtml, 'accessoverlay') &&
-        !str_contains($lowerHtml, 'access-locked')
+        !$hasAccessOverlay
       ) {
         $result = @file_put_contents($file, $html, LOCK_EX);
 
@@ -179,12 +182,11 @@ function page_cache_start(array $config, string $path): void
             header('X-Page-Cache-Write: OK');
         }
       } elseif (!headers_sent()) {
-        header('X-Page-Cache-Write: SKIP-LOCKED');
+        header('X-Page-Cache-Write: SKIP-OVERLAY');
       }
 
       return $html;
     });
-
 }
 
 /**

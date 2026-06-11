@@ -68,7 +68,7 @@ if ($path === "/access/verify-code") {
  * Shows all soft-hidden pages and hard-blocked pages for admin IPs only.
  */
 if ($path === "/admin/hidden-pages") {
-	require __DIR__ . "/admin/admin_blockedpages.php";
+	require __DIR__ . "/app/admin/blocked_pages.php";
 }
 
 /*

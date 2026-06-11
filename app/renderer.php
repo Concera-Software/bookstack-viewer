@@ -37,6 +37,7 @@ $description = function_exists('seo_meta_description')
     echo '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'; 
     echo '<link rel="apple-touch-icon" href="/favicon.png">'; 
     echo '<link rel="stylesheet" href="/assets/style.css">';
+    echo '<script src="/assets/js/bookstack-viewer.js?v=1" defer></script>';
     echo '<script type="application/ld+json">';
     echo json_encode([
         '@context' => 'https://schema.org',
@@ -217,7 +218,7 @@ function bookstack_page_url(array $config, array $page): ?string
  *
  * @return string
  */
-function add_collapse_javascirpt(): string
+function add_collapse_javascirpt_old(): string
 {
     $html = '
 <script>
@@ -504,7 +505,7 @@ function render_book_tree(array $pages, ?int $activePageId = null, array $active
     $html .= '</nav>';
     $html .= '</aside>';
 
-    $html .= add_collapse_javascirpt();
+//    $html .= add_collapse_javascirpt();
 
     return $html;
 }
@@ -646,176 +647,7 @@ function render_split_documentation(
             '</section>' .
             '<div class="doc-resizer" id="docResizer" role="separator" aria-orientation="vertical" title="Drag to resize navigation"></div>' .
             render_book_tree($treePages, $activePageId, $activeHeadings) .
-        '</div>' .
-        '<script>
-            (function () {
-                const split = document.getElementById("docSplit");
-                const resizer = document.getElementById("docResizer");
-
-                if (!split || !resizer) {
-                    return;
-                }
-
-                const storageKey = "bookstack_public_nav_width";
-
-                function maxWidth() {
-                    return Math.floor(window.innerWidth * 0.25);
-                }
-
-                function minWidth() {
-                    return Math.min(240, maxWidth());
-                }
-
-                function applyWidth(width) {
-                    const min = minWidth();
-                    const max = maxWidth();
-                    const safeWidth = Math.max(min, Math.min(max, width));
-
-                    split.style.setProperty("--doc-nav-width", safeWidth + "px");
-                    localStorage.setItem(storageKey, String(safeWidth));
-                }
-
-                const saved = parseInt(localStorage.getItem(storageKey) || "", 10);
-
-                if (!Number.isNaN(saved)) {
-                    applyWidth(saved);
-                } else {
-                    applyWidth(maxWidth());
-                }
-
-                let dragging = false;
-
-                resizer.addEventListener("pointerdown", function (event) {
-                    dragging = true;
-                    document.body.classList.add("resizing-doc-nav");
-                    resizer.setPointerCapture(event.pointerId);
-                    event.preventDefault();
-                });
-
-                window.addEventListener("pointermove", function (event) {
-                    if (!dragging) {
-                        return;
-                    }
-
-                    /*
-                     * Because the tree is visually on the left, event.clientX
-                     * can still be used as the requested navigation width.
-                     */
-                    applyWidth(event.clientX);
-                });
-
-                window.addEventListener("pointerup", function () {
-                    dragging = false;
-                    document.body.classList.remove("resizing-doc-nav");
-                });
-
-                window.addEventListener("resize", function () {
-                    const current = parseInt(
-                        getComputedStyle(split).getPropertyValue("--doc-nav-width"),
-                        10
-                    );
-
-                    if (!Number.isNaN(current)) {
-                        applyWidth(current);
-                    }
-                });
-            })();
-        </script>';
-}
-
-/**
- * Render split-screen documentation layout.
- *
- * @param array $treePages
- * @param string $contentHtml
- * @param ?int $activePageId
- * @param array $activeHeadings
- * @return string
- */
-function render_split_documentation_old(
-    array $treePages,
-    string $contentHtml,
-    ?int $activePageId = null,
-    array $activeHeadings = []
-): string {
-    return
-        '<div class="doc-split" id="docSplit">' .
-            render_book_tree($treePages, $activePageId, $activeHeadings) .
-            '<div class="doc-resizer" id="docResizer" role="separator" aria-orientation="vertical" title="Drag to resize navigation"></div>' .
-            '<section class="doc-view">' .
-                $contentHtml .
-            '</section>' .
-        '</div>' .
-        '<script>
-            (function () {
-                const split = document.getElementById("docSplit");
-                const resizer = document.getElementById("docResizer");
-
-                if (!split || !resizer) {
-                    return;
-                }
-
-                const storageKey = "bookstack_public_nav_width";
-
-                function maxWidth() {
-                    return Math.floor(window.innerWidth * 0.25);
-                }
-
-                function minWidth() {
-                    return Math.min(240, maxWidth());
-                }
-
-                function applyWidth(width) {
-                    const min = minWidth();
-                    const max = maxWidth();
-                    const safeWidth = Math.max(min, Math.min(max, width));
-
-                    split.style.setProperty("--doc-nav-width", safeWidth + "px");
-                    localStorage.setItem(storageKey, String(safeWidth));
-                }
-
-                const saved = parseInt(localStorage.getItem(storageKey) || "", 10);
-
-                if (!Number.isNaN(saved)) {
-                    applyWidth(saved);
-                } else {
-                    applyWidth(maxWidth());
-                }
-
-                let dragging = false;
-
-                resizer.addEventListener("pointerdown", function (event) {
-                    dragging = true;
-                    document.body.classList.add("resizing-doc-nav");
-                    resizer.setPointerCapture(event.pointerId);
-                    event.preventDefault();
-                });
-
-                window.addEventListener("pointermove", function (event) {
-                    if (!dragging) {
-                        return;
-                    }
-
-                    applyWidth(event.clientX);
-                });
-
-                window.addEventListener("pointerup", function () {
-                    dragging = false;
-                    document.body.classList.remove("resizing-doc-nav");
-                });
-
-                window.addEventListener("resize", function () {
-                    const current = parseInt(
-                        getComputedStyle(split).getPropertyValue("--doc-nav-width"),
-                        10
-                    );
-
-                    if (!Number.isNaN(current)) {
-                        applyWidth(current);
-                    }
-                });
-            })();
-        </script>';
+        '</div>';
 }
 
 /**
@@ -847,7 +679,7 @@ $pendingEmail = htmlspecialchars(
     return '
 <div class="access-overlay" id="accessOverlay">
     <div class="access-card">
-        <h4 class="access-title">Access required<h4>
+	<h4 class="access-title">Access required</h4>
         <p class="access-intro">
             Enter your email address. We will send you a one-time access code and a direct login link.
         </p>
@@ -888,146 +720,6 @@ $pendingEmail = htmlspecialchars(
         <p id="accessMessage" class="access-message"></p>
     </div>
 </div>
-
-<script>
-(function () {
-    const emailForm = document.getElementById("accessEmailForm");
-    const codeForm = document.getElementById("accessCodeForm");
-    const emailInput = document.getElementById("accessEmail");
-    const codeInput = document.getElementById("accessCode");
-    const codeEmailInput = document.getElementById("accessCodeEmail");
-    const message = document.getElementById("accessMessage");
-    const resendButton = document.getElementById("accessResendButton");
-
-    let resendCooldown = 0;
-    let resendTimer = null;
-
-    function setMessage(text, isError) {
-        message.textContent = text || "";
-        message.className = "access-message" + (isError ? " error" : " success");
-    }
-
-    async function postForm(url, data) {
-        const body = new URLSearchParams();
-
-        Object.keys(data).forEach(function (key) {
-            body.append(key, data[key]);
-        });
-
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-            },
-            body: body.toString(),
-            credentials: "same-origin"
-        });
-
-        return await response.json();
-    }
-
-    function startResendCooldown() {
-        resendCooldown = 30;
-        resendButton.disabled = true;
-        resendButton.textContent = "Resend code (" + resendCooldown + ")";
-
-        if (resendTimer) {
-            clearInterval(resendTimer);
-        }
-
-        resendTimer = setInterval(function () {
-            resendCooldown--;
-
-            if (resendCooldown <= 0) {
-                clearInterval(resendTimer);
-                resendButton.disabled = false;
-                resendButton.textContent = "Resend code";
-                return;
-            }
-
-            resendButton.textContent = "Resend code (" + resendCooldown + ")";
-        }, 1000);
-    }
-
-    async function requestCode() {
-        const email = emailInput.value.trim();
-
-        if (!email) {
-            setMessage("Please enter your email address.", true);
-            return;
-        }
-
-        setMessage("Sending access email...", false);
-
-        try {
-            const result = await postForm("/access/request-code", {
-                email: email,
-                return_to: window.location.pathname + window.location.search
-            });
-
-            if (!result.ok) {
-                setMessage(result.message || "Could not send the access email.", true);
-                return;
-            }
-
-            codeEmailInput.value = result.email || email;
-            codeForm.style.display = "";
-            codeInput.focus();
-
-            setMessage(result.message || "Access email sent.", false);
-            //startResendCooldown();
-        } catch (error) {
-            setMessage("Could not contact the server. Please try again.", true);
-        }
-    }
-
-    async function verifyCode() {
-        const email = codeEmailInput.value.trim() || emailInput.value.trim();
-        const code = codeInput.value.trim();
-
-        if (!email || !code) {
-            setMessage("Please enter the code from your email.", true);
-            return;
-        }
-
-        setMessage("Verifying code...", false);
-
-        try {
-            const result = await postForm("/access/verify-code", {
-                email: email,
-                code: code
-            });
-
-            if (!result.ok) {
-                setMessage(result.message || "The code could not be verified.", true);
-                return;
-            }
-
-            setMessage(result.message || "Access granted.", false);
-            window.location.href = result.redirect || window.location.href;
-        } catch (error) {
-            setMessage("Could not contact the server. Please try again.", true);
-        }
-    }
-
-    emailForm.addEventListener("submit", function (event) {
-        event.preventDefault();
-        requestCode();
-    });
-
-    codeForm.addEventListener("submit", function (event) {
-        event.preventDefault();
-        verifyCode();
-    });
-
-    resendButton.addEventListener("click", function () {
-        if (resendCooldown > 0) {
-            return;
-        }
-
-        requestCode();
-    });
-})();
-</script>';
+';
 }
 

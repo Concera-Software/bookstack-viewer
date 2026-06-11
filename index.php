@@ -702,8 +702,21 @@ if (preg_match('#^/books/([^/]+)/page/([^/]+)$#', $path, $match)) {
 
     //$treePages = fetch_all_tree_pages($pdo, $config);
     $treePages = fetch_tree_pages($pdo, $config, (string) $page["book_slug"]);
-    $description =
-        $page["description"] ?: excerpt($page["text_content"] ?? "", 160);
+
+//    $description =
+//        $page["description"] ?: excerpt($page["text_content"] ?? "", 160);
+
+    $description = seo_meta_description(
+        (string)($page["description"] ?? ""),
+        (string)($page["text_content"] ?? ""),
+        155
+    );
+
+    $seoTitle = seo_page_title(
+        (string)($page["page_name"] ?? ""),
+        (string)($page["book_name"] ?? ""),
+        58
+    );
 
     $pageHtml = add_heading_ids($page["html"] ?? "");
     $activeHeadings = extract_headings($pageHtml);
@@ -821,11 +834,19 @@ if (preg_match('#^/books/([^/]+)/page/([^/]+)$#', $path, $match)) {
 
     render_layout(
         $config,
-        $page["page_name"],
+        $seoTitle,
         $description,
         $html,
         $page["url_path"]
     );
+
+//    render_layout(
+//        $config,
+//        $page["page_name"],
+//        $description,
+//        $html,
+//        $page["url_path"]
+//    );
     exit();
 }
 

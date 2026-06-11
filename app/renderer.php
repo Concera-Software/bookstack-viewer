@@ -17,6 +17,14 @@ function render_layout(array $config, string $title, string $description, string
     $appName = $config['app_name'] ?? 'Documentation';
     $canonical = canonical_url($config, $canonicalPath);
 
+$title = function_exists('seo_limit_text')
+    ? seo_limit_text($title, 70)
+    : $title;
+
+$description = function_exists('seo_meta_description')
+    ? seo_meta_description($description, '', 155)
+    : $description;
+
     echo '<!doctype html>';
     echo '<html lang="en">';
     echo '<head>';
@@ -25,6 +33,9 @@ function render_layout(array $config, string $title, string $description, string
     echo '<title>' . e($title) . ' - ' . e($appName) . '</title>';
     echo '<meta name="description" content="' . e($description) . '">';
     echo '<link rel="canonical" href="' . e($canonical) . '">';
+    echo '<link rel="icon" href="/favicon.ico" sizes="any">';
+    echo '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'; 
+    echo '<link rel="apple-touch-icon" href="/favicon.png">'; 
     echo '<link rel="stylesheet" href="/assets/style.css">';
     echo '<script type="application/ld+json">';
     echo json_encode([

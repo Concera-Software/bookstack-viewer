@@ -10,6 +10,7 @@ require __DIR__ . "/app/renderer.php";
 require __DIR__ . "/app/access_gate.php";
 require __DIR__ . "/app/exclusions.php";
 require __DIR__ . "/app/page_repository.php";
+require __DIR__ . "/app/asset_proxy.php";
 
 redirect_to_base_url_if_needed($config);
 access_gate_start_session($config);
@@ -22,6 +23,11 @@ $GLOBALS["config"] = $config;
 $path = parse_url($_SERVER["REQUEST_URI"] ?? "/", PHP_URL_PATH) ?: "/";
 $path = "/" . trim($path, "/");
 $path = $path === "/" ? "/" : rtrim($path, "/");
+
+if ($path === asset_proxy_path($config)) {
+    asset_proxy_handle_request($config);
+    exit();
+}
 
 /**
  * Handle access-gate and admin POST endpoints before rendering normal pages.
@@ -718,7 +724,14 @@ if (preg_match('#^/books/([^/]+)/page/([^/]+)$#', $path, $match)) {
         58
     );
 
-    $pageHtml = add_heading_ids($page["html"] ?? "");
+$pageHtml = add_heading_ids($page["html"] ?? "");
+
+if (function_exists("asset_proxy_rewrite_html")) {
+    $pageHtml = asset_proxy_rewrite_html($pageHtml, $page, $config);
+}
+
+$activeHeadings = extract_headings($pageHtml);
+
     $activeHeadings = extract_headings($pageHtml);
     $sourceUrl = bookstack_page_url($config, $page);
 

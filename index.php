@@ -67,7 +67,7 @@ if ($path === "/access/verify-code") {
  *
  * Shows all soft-hidden pages and hard-blocked pages for admin IPs only.
  */
-if ($path === "/app/admin/hidden-pages") {
+if ($path === "/admin/hidden-pages") {
     require __DIR__ . "/app/admin/blocked_pages.php";
 }
 
@@ -585,8 +585,8 @@ if (preg_match('#^/books/([^/]+)$#', $path, $match)) {
         render_layout(
             $config,
             "Not found",
-            "Book not found.",
-            '<div class="empty-state">Book not found.</div>',
+            "Book not found (Error 01).",
+            '<div class="empty-state">Book not found (Error 01).</div>',
             $path
         );
         exit();
@@ -700,8 +700,8 @@ if (preg_match('#^/books/([^/]+)/page/([^/]+)$#', $path, $match)) {
         render_layout(
             $config,
             "Not found",
-            "Page not found.",
-            '<div class="empty-state">Page not found.</div>',
+            "Page not found (Error 02).",
+            '<div class="empty-state">Page $path not found (Error 02).</div>',
             $path
         );
         exit();
@@ -712,8 +712,8 @@ if (preg_match('#^/books/([^/]+)/page/([^/]+)$#', $path, $match)) {
         render_layout(
             $config,
             "Not found",
-            "Page not found.",
-            '<div class="empty-state">Page not found.</div>',
+            "Page not found (Error 03).",
+            '<div class="empty-state">Page $path not found (Error 03).</div>',
             $path
         );
         exit();
@@ -934,8 +934,8 @@ if (preg_match('#^/pages/([^/]+)$#', $path, $match)) {
     render_layout(
         $config,
         "Not found",
-        "Page not found.",
-        '<div class="empty-state">Page not found.</div>',
+        "Page not found (Error 04).",
+        '<div class="empty-state">Page $path not found (Error 04).</div>',
         $path
     );
     exit();
@@ -974,8 +974,8 @@ if (preg_match('#^/pages/([0-9]+)/([^/]+)$#', $path, $match)) {
     render_layout(
         $config,
         "Not found",
-        "Page not found.",
-        '<div class="empty-state">Page not found.</div>',
+        "Page not found (Error 05).",
+        '<div class="empty-state">Page not found (Error 05).</div>',
         $path
     );
     exit();
@@ -985,7 +985,7 @@ http_response_code(404);
 render_layout(
     $config,
     "Not found",
-    "Page not found.",
-    '<div class="empty-state">The requested page does not exist.</div>',
+    "Page not found (Error 06).",
+    '<div class="empty-state">The requested page $path does not exist (Error 06).</div>',
     $path
 );

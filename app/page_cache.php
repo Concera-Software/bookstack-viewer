@@ -60,7 +60,7 @@ function page_cache_is_cacheable_request(array $config, string $path): bool
         str_starts_with($path, '/access/') ||
         str_starts_with($path, '/admin/') ||
         str_starts_with($path, '/asset-proxy') ||
-        $path === '/search' ||
+//        $path === '/search' ||
         $path === '/robots.txt' ||
         $path === '/sitemap.xml'
     ) {
@@ -143,6 +143,8 @@ function page_cache_try_serve(array $config, string $path): bool
  */
 function page_cache_start(array $config, string $path): void
 {
+
+
     if (!page_cache_is_cacheable_request($config, $path)) {
         return;
     }
@@ -161,19 +163,24 @@ function page_cache_start(array $config, string $path): void
 
     $file = page_cache_file($config, $path);
 
-    ob_start(static function (string $html) use ($file): string {
-      $statusCode = http_response_code();
-      $lowerHtml = strtolower($html);
+  ob_start(static function (string $html) use ($file): string {
+    $statusCode = http_response_code();
+    $lowerHtml = strtolower($html);
 
-      $hasAccessOverlay =
+    $hasAccessOverlay =
         str_contains($lowerHtml, 'id="accessoverlay"') ||
         str_contains($lowerHtml, "id='accessoverlay'");
 
-      if (
+    $hasAdminTree =
+        str_contains($lowerHtml, 'href="/admin/hidden-pages"') ||
+        str_contains($lowerHtml, "href='/admin/hidden-pages'");
+
+    if (
         ($statusCode === 200 || $statusCode === false) &&
         str_contains($lowerHtml, '<!doctype html>') &&
-        !$hasAccessOverlay
-      ) {
+        !$hasAccessOverlay &&
+        !$hasAdminTree
+    ) {
         $result = @file_put_contents($file, $html, LOCK_EX);
 
         if ($result === false && !headers_sent()) {
@@ -181,12 +188,16 @@ function page_cache_start(array $config, string $path): void
         } elseif (!headers_sent()) {
             header('X-Page-Cache-Write: OK');
         }
-      } elseif (!headers_sent()) {
-        header('X-Page-Cache-Write: SKIP-OVERLAY');
-      }
+    } elseif (!headers_sent()) {
+        header(
+            'X-Page-Cache-Write: ' .
+            ($hasAdminTree ? 'SKIP-ADMIN' : ($hasAccessOverlay ? 'SKIP-OVERLAY' : 'SKIP'))
+        );
+    }
 
-      return $html;
-    });
+    return $html;
+  });
+
 }
 
 /**

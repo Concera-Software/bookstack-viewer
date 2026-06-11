@@ -12,6 +12,43 @@ declare(strict_types=1);
  * - The current verified access-gate email is configured as an admin email.
  */
 
+$debugIpOk = function_exists("can_manage_page_exclusions")
+    ? can_manage_page_exclusions($config, null)
+    : false;
+
+$debugEmail = function_exists("current_verified_access_email")
+    ? current_verified_access_email()
+    : '';
+
+$debugAdminEmails = function_exists("admin_email_addresses")
+    ? admin_email_addresses($config)
+    : [];
+
+$debugEmailOk = $debugEmail !== '' && in_array($debugEmail, $debugAdminEmails, true);
+
+header("X-Debug-Admin-Ip-Ok: " . ($debugIpOk ? "yes" : "no"));
+header("X-Debug-Admin-Email: " . ($debugEmail !== "" ? $debugEmail : "none"));
+header("X-Debug-Admin-Email-Ok: " . ($debugEmailOk ? "yes" : "no"));
+header("X-Debug-Remote-Addr: " . ($_SERVER["REMOTE_ADDR"] ?? "none"));
+header("X-Debug-Forwarded-For: " . ($_SERVER["HTTP_X_FORWARDED_FOR"] ?? "none"));
+
+if (
+    !function_exists("can_access_admin_pages") ||
+    !can_access_admin_pages($config, null)
+) {
+    http_response_code(404);
+
+    render_layout(
+        $config,
+        "Not found",
+        "Page not found (Error 101).",
+        '<div class="empty-state">Page not found (Error 101).</div>',
+        $path
+    );
+
+    exit();
+}
+
 if ($path !== "/admin/hidden-pages") {
     return;
 }
@@ -25,8 +62,8 @@ if (
     render_layout(
         $config,
         "Not found",
-        "Page not found.",
-        '<div class="empty-state">Page not found.</div>',
+        "Page not found (Error 102).",
+        '<div class="empty-state">Page not found (Error 102).</div>',
         $path
     );
 

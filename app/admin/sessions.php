@@ -27,6 +27,17 @@ if (
     exit();
 }
 
+if ($action === "delete_revoked_session") {
+    $sessionId = trim((string)($_POST["session_id"] ?? ""));
+
+    if ($sessionId !== "") {
+        admin_delete_revoked_session($pdo, $sessionId);
+    }
+
+    header("Location: " . $returnTo);
+    exit();
+}
+
 header("X-Robots-Tag: noindex, nofollow, noarchive", true);
 
 $adminEmail = function_exists("current_verified_access_email")
@@ -165,6 +176,14 @@ if (!$sessions) {
             $content .= '<button type="submit" class="danger-button">Log off</button>';
             $content .= '</form>';
         }
+
+if ($isRevoked) {
+    $content .= '<form method="post" class="inline-admin-form">';
+    $content .= '<input type="hidden" name="action" value="delete_revoked_session">';
+    $content .= '<input type="hidden" name="session_id" value="' . e($sessionId) . '">';
+    $content .= '<button type="submit" class="danger-button">Remove</button>';
+    $content .= '</form>';
+}
 
         $content .= '<form method="post" class="inline-admin-form">';
         $content .= '<input type="hidden" name="action" value="block_ip">';

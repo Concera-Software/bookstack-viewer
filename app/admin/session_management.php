@@ -223,3 +223,29 @@ function admin_current_session_is_revoked(PDO $pdo): bool
 
     return $row && !empty($row['revoked_at']);
 }
+
+/**
+ * Remove one revoked session from the session registry.
+ *
+ * This only removes sessions that are already revoked.
+ *
+ * @param PDO $pdo
+ * @param string $sessionId
+ * @return void
+ */
+function admin_delete_revoked_session(PDO $pdo, string $sessionId): void
+{
+    if ($sessionId === '') {
+        return;
+    }
+
+    $stmt = $pdo->prepare("
+        DELETE FROM public_access_sessions
+        WHERE session_id = :session_id
+          AND revoked_at IS NOT NULL
+    ");
+
+    $stmt->execute([
+        'session_id' => $sessionId,
+    ]);
+}

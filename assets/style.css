@@ -750,6 +750,12 @@ button:hover {
     line-height: 1.15;
 }
 
+.access-title h4 {
+   font-size: font-weight: 700;
+   font-size: 1.92rem;
+
+}
+
 .access-intro {
     margin: 0 0 20px;
     color: #667085;
@@ -763,7 +769,7 @@ button:hover {
 
 .access-form label {
     color: #344054;
-    font-weight: 700;
+    font-weight: 100;
     font-size: 0.92rem;
 }
 

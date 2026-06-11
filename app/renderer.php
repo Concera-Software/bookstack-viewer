@@ -734,7 +734,7 @@ $pendingEmail = htmlspecialchars(
     return '
 <div class="access-overlay" id="accessOverlay">
     <div class="access-card">
-        <h1>Access required</h1>
+        <h4 class="access-title">Access required<h4>
         <p class="access-intro">
             Enter your email address. We will send you a one-time access code and a direct login link.
         </p>

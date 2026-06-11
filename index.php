@@ -336,7 +336,7 @@ $showAdminTile =
 if ($showAdminTile) {
     $html .= '<article class="book-card admin-book-card">';
     $html .= '<h2><a href="/admin">Admin</a></h2>';
-    $html .= '<p>2 admin modules</p>';
+    $html .= '<p>administrative modules</p>';
     $html .= '<span class="card-meta">Session management and hidden page controls</span>';
     $html .= '</article>';
 }

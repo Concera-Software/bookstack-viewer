@@ -27,17 +27,6 @@ if (
     exit();
 }
 
-if ($action === "delete_revoked_session") {
-    $sessionId = trim((string)($_POST["session_id"] ?? ""));
-
-    if ($sessionId !== "") {
-        admin_delete_revoked_session($pdo, $sessionId);
-    }
-
-    header("Location: " . $returnTo);
-    exit();
-}
-
 header("X-Robots-Tag: noindex, nofollow, noarchive", true);
 
 $adminEmail = function_exists("current_verified_access_email")
@@ -62,6 +51,18 @@ if (($_SERVER["REQUEST_METHOD"] ?? "GET") === "POST") {
         header("Location: " . $returnTo);
         exit();
     }
+
+
+if ($action === "delete_revoked_session") {
+    $sessionId = trim((string)($_POST["session_id"] ?? ""));
+
+    if ($sessionId !== "") {
+        admin_delete_revoked_session($pdo, $sessionId);
+    }
+
+    header("Location: " . $returnTo);
+    exit();
+}
 
 
     if ($action === "block_ip") {

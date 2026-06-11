@@ -197,6 +197,10 @@ function access_gate_enabled(array $config): bool
 /**
  * Check if the current session is verified.
  *
+ * A verified session must contain both:
+ * - manual_access_email
+ * - manual_access_verified_until
+ *
  * @param array $config
  * @return bool
  */
@@ -206,9 +210,16 @@ function access_gate_is_verified(array $config): bool
         return true;
     }
 
+    $email = trim((string)($_SESSION['manual_access_email'] ?? ''));
     $verifiedUntil = (int)($_SESSION['manual_access_verified_until'] ?? 0);
 
-    if ($verifiedUntil <= 0) {
+    if ($email === '' || $verifiedUntil <= 0) {
+        unset(
+            $_SESSION['manual_access_email'],
+            $_SESSION['manual_access_verified_until'],
+            $_SESSION['manual_access_pending_email']
+        );
+
         return false;
     }
 
@@ -224,6 +235,7 @@ function access_gate_is_verified(array $config): bool
 
     return true;
 }
+
 
 /**
  * Return the current verified email address, if available.

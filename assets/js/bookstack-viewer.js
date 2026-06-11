@@ -1,4 +1,4 @@
-/* versio 1.0.3 */
+/* versio 1.0.5 */
 
 (function () {
     'use strict';
@@ -217,7 +217,8 @@ function initAccessGate() {
         try {
             const result = await postForm('/access/verify-code', {
                 email: email,
-                code: code
+                code: code, 
+		return_to: window.location.pathname + window.location.search
             });
 
             if (!result.ok) {

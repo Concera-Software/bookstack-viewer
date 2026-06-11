@@ -699,11 +699,18 @@ function access_gate_verify_code(PDO $pdo, array $config): array
             'Access granted by code'
         );
 
-        return [
-            'ok' => true,
-            'message' => 'Access granted.',
-            'redirect' => '/',
-        ];
+$returnTo = (string)($_POST['return_to'] ?? '/');
+
+if ($returnTo === '' || $returnTo[0] !== '/' || str_starts_with($returnTo, '//')) {
+    $returnTo = '/';
+}
+
+return [
+    'ok' => true,
+    'message' => 'Access granted.',
+    'redirect' => $returnTo,
+];
+
     } catch (Throwable $e) {
         error_log('Access code verification failed: ' . $e->getMessage());
 

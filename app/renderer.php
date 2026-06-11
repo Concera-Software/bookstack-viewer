@@ -613,6 +613,9 @@ $html .= '</a>';
 /**
  * Render split-screen documentation layout.
  *
+ * The page content is rendered before the navigation tree in the HTML source.
+ * CSS places the tree visually on the left and the content on the right.
+ *
  * @param array $treePages
  * @param string $contentHtml
  * @param ?int $activePageId
@@ -620,6 +623,105 @@ $html .= '</a>';
  * @return string
  */
 function render_split_documentation(
+    array $treePages,
+    string $contentHtml,
+    ?int $activePageId = null,
+    array $activeHeadings = []
+): string {
+    return
+        '<div class="doc-split doc-split-content-first" id="docSplit">' .
+            '<section class="doc-view">' .
+                $contentHtml .
+            '</section>' .
+            '<div class="doc-resizer" id="docResizer" role="separator" aria-orientation="vertical" title="Drag to resize navigation"></div>' .
+            render_book_tree($treePages, $activePageId, $activeHeadings) .
+        '</div>' .
+        '<script>
+            (function () {
+                const split = document.getElementById("docSplit");
+                const resizer = document.getElementById("docResizer");
+
+                if (!split || !resizer) {
+                    return;
+                }
+
+                const storageKey = "bookstack_public_nav_width";
+
+                function maxWidth() {
+                    return Math.floor(window.innerWidth * 0.25);
+                }
+
+                function minWidth() {
+                    return Math.min(240, maxWidth());
+                }
+
+                function applyWidth(width) {
+                    const min = minWidth();
+                    const max = maxWidth();
+                    const safeWidth = Math.max(min, Math.min(max, width));
+
+                    split.style.setProperty("--doc-nav-width", safeWidth + "px");
+                    localStorage.setItem(storageKey, String(safeWidth));
+                }
+
+                const saved = parseInt(localStorage.getItem(storageKey) || "", 10);
+
+                if (!Number.isNaN(saved)) {
+                    applyWidth(saved);
+                } else {
+                    applyWidth(maxWidth());
+                }
+
+                let dragging = false;
+
+                resizer.addEventListener("pointerdown", function (event) {
+                    dragging = true;
+                    document.body.classList.add("resizing-doc-nav");
+                    resizer.setPointerCapture(event.pointerId);
+                    event.preventDefault();
+                });
+
+                window.addEventListener("pointermove", function (event) {
+                    if (!dragging) {
+                        return;
+                    }
+
+                    /*
+                     * Because the tree is visually on the left, event.clientX
+                     * can still be used as the requested navigation width.
+                     */
+                    applyWidth(event.clientX);
+                });
+
+                window.addEventListener("pointerup", function () {
+                    dragging = false;
+                    document.body.classList.remove("resizing-doc-nav");
+                });
+
+                window.addEventListener("resize", function () {
+                    const current = parseInt(
+                        getComputedStyle(split).getPropertyValue("--doc-nav-width"),
+                        10
+                    );
+
+                    if (!Number.isNaN(current)) {
+                        applyWidth(current);
+                    }
+                });
+            })();
+        </script>';
+}
+
+/**
+ * Render split-screen documentation layout.
+ *
+ * @param array $treePages
+ * @param string $contentHtml
+ * @param ?int $activePageId
+ * @param array $activeHeadings
+ * @return string
+ */
+function render_split_documentation_old(
     array $treePages,
     string $contentHtml,
     ?int $activePageId = null,

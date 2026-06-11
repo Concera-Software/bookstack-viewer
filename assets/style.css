@@ -313,6 +313,24 @@ button:hover {
     letter-spacing: -0.035em;
 }
 
+/* SEO/source-order layout:
+   HTML order is content, resizer, tree.
+   Visual order stays tree, resizer, content. */
+.doc-split-content-first .doc-tree {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.doc-split-content-first .doc-resizer {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.doc-split-content-first .doc-view {
+    grid-column: 3;
+    grid-row: 1;
+}
+
 .lead {
     color: var(--muted);
     font-size: 1.05rem;
@@ -751,7 +769,7 @@ button:hover {
 }
 
 .access-title h4 {
-   font-size: font-weight: 700;
+   font-size: font-weight: 700 !important;
    font-size: 1.92rem;
 
 }

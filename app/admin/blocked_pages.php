@@ -1,5 +1,7 @@
 <?php
 
+/* version 1.0.0 */
+
 declare(strict_types=1);
 
 /**
@@ -198,6 +200,15 @@ $content = '<article class="doc-page">';
 $content .= '<h1>Hidden and blocked pages</h1>';
 $content .= '<p class="lead">This admin-only overview lists pages hidden from normal visitors or blocked by configuration.</p>';
 
+$content .= '<div class="admin-filter-bar">';
+$content .= '<label for="adminHiddenFilter"><strong>Filter:</strong></label>';
+$content .= '<select id="adminHiddenFilter" class="admin-hidden-filter">';
+$content .= '<option value="all">All hidden and blocked pages</option>';
+$content .= '<option value="hard">Hard blocked pages only</option>';
+$content .= '<option value="soft">Soft hidden pages only</option>';
+$content .= '</select>';
+$content .= '</div>';
+
 if (!$rows) {
     $content .= '<div class="empty-state">No hidden or blocked pages found.</div>';
 } else {
@@ -223,15 +234,15 @@ if (!$rows) {
             $classes[] = "overview-link-disabled";
         }
 
-        $content .= '<a class="' . e(implode(" ", $classes)) . '" href="' . e($href) . '">';
+	$content .= '<a class="' . e(implode(" ", $classes)) . '" href="' . e($href) . '" data-admin-hidden-type="' . e($isHardBlocked ? "hard" : "soft") . '">';
 
         $content .= '<strong>';
         $content .= e((string)$row["page_name"]);
 
         if ($isHardBlocked) {
-            $content .= ' <span class="hidden-page-label">Hard blocked</span>';
+            $content .= ' <span class="hidden-page-label hidden-page-label-hard">Hard blocked</span>';
         } else {
-            $content .= ' <span class="hidden-page-label">Soft hidden</span>';
+            $content .= ' <span class="hidden-page-label hidden-page-label-soft">Soft hidden</span>';
         }
 
         $content .= '</strong>';
@@ -273,6 +284,30 @@ if (!$rows) {
 }
 
 $content .= '</article>';
+
+$content .= <<<HTML
+<script>
+(function () {
+    const filter = document.getElementById("adminHiddenFilter");
+
+    if (!filter) {
+        return;
+    }
+
+    const items = document.querySelectorAll("[data-admin-hidden-type]");
+
+    filter.addEventListener("change", function () {
+        const value = filter.value;
+
+        items.forEach(function (item) {
+            const type = item.getAttribute("data-admin-hidden-type");
+
+            item.hidden = value !== "all" && type !== value;
+        });
+    });
+})();
+</script>
+HTML;
 
 $treePages = [];
 

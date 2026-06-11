@@ -1,4 +1,4 @@
-/* version 1.0.2 */
+/* version 1.0.3 */
 
 :root {
     --bg: #f4f6f8;
@@ -1219,6 +1219,17 @@ html {
     font-weight: 700;
 }
 
+.hidden-page-label-hard {
+    background: #fca5a5 !important;
+    border: 1px solid #fca5a5 !important;
+    color: #ffffff !important;
+}
+
+.hidden-page-label-soft {
+    background: #fee2e2 !important;
+}
+
+
 .admin-hidden-table tr.is-hard-blocked td:first-child strong {
     color: #b42318;
 }
@@ -1226,6 +1237,29 @@ html {
 .admin-hidden-table tr.is-soft-hidden td:first-child strong {
     color: #b54708;
 }
+
+
+.admin-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0 1rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel-soft);
+}
+
+.admin-hidden-filter {
+    min-width: 260px;
+    height: 40px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: #ffffff;
+    padding: 0 0.75rem;
+    font: inherit;
+}
+
 
 
 /* Layout cleanup requested 2026-06-10 */

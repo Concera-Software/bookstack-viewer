@@ -1,5 +1,7 @@
 <?php
 
+// version 1.0.0
+
 declare(strict_types=1);
 
 /**
@@ -37,7 +39,7 @@ $description = function_exists('seo_meta_description')
     echo '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'; 
     echo '<link rel="apple-touch-icon" href="/favicon.png">'; 
     echo '<link rel="stylesheet" href="/assets/style.css">';
-    echo '<script src="/assets/js/bookstack-viewer.js?v=1" defer></script>';
+    echo '<script src="/assets/js/bookstack-viewer.js?v=3" defer></script>';
     echo '<script type="application/ld+json">';
     echo json_encode([
         '@context' => 'https://schema.org',
@@ -53,9 +55,13 @@ $description = function_exists('seo_meta_description')
     echo '</script>';
     echo '</head>';
 
-    $accessVerified = function_exists('access_gate_is_verified')
-        ? access_gate_is_verified($config)
-        : true;
+if (
+    !$accessVerified &&
+    function_exists('render_access_gate_overlay') &&
+    (!function_exists('request_looks_like_bot') || !request_looks_like_bot())
+) {
+    echo render_access_gate_overlay($config);
+}
 
     echo '<body class="' . ($accessVerified ? 'access-granted' : 'access-locked') . '">';
     echo '<header class="site-header">';
@@ -677,7 +683,7 @@ $pendingEmail = htmlspecialchars(
     'UTF-8'
 );
     return '
-<div class="access-overlay" id="accessOverlay">
+<div class="access-overlay" id="accessOverlay" hidden data-access-overlay>
     <div class="access-card">
 	<h4 class="access-title">Access required</h4>
         <p class="access-intro">

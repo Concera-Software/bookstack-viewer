@@ -148,3 +148,26 @@ function seo_meta_description(string $description, string $fallbackText = '', in
 
     return seo_limit_text($description, $maxLength);
 }
+
+
+/**
+ * Return whether the current visitor looks like a search engine or bot.
+ *
+ * This is only used to avoid rendering the registration overlay chrome.
+ * The actual document content remains the same.
+ *
+ * @return bool
+ */
+function request_looks_like_bot(): bool
+{
+    $userAgent = strtolower((string)($_SERVER['HTTP_USER_AGENT'] ?? ''));
+
+    if ($userAgent === '') {
+        return true;
+    }
+
+    return (bool)preg_match(
+        '/bot|crawler|spider|slurp|bingpreview|google|bing|yandex|duckduck|baidu|semrush|ahrefs|mj12|curl|wget|python|php|validator|lighthouse|pagespeed/i',
+        $userAgent
+    );
+}

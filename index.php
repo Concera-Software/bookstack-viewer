@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 $config = require __DIR__ . "/app/config.php";
 
+require __DIR__ . "/app/page_cache.php";
 require __DIR__ . "/app/db.php";
 require __DIR__ . "/app/helpers.php";
 require __DIR__ . "/app/renderer.php";
@@ -24,19 +25,26 @@ $path = parse_url($_SERVER["REQUEST_URI"] ?? "/", PHP_URL_PATH) ?: "/";
 $path = "/" . trim($path, "/");
 $path = $path === "/" ? "/" : rtrim($path, "/");
 
-if ($path === asset_proxy_path($config)) {
-    asset_proxy_handle_request($config);
+if (
+    $path === asset_proxy_path($config) ||
+    str_starts_with($path, asset_proxy_path($config) . '/')
+) {
+    asset_proxy_handle_request($config, $path);
     exit();
 }
 
-/**
- * Handle access-gate and admin POST endpoints before rendering normal pages.
- */
 if (
     $path === "/access/request-code" &&
     ($_SERVER["REQUEST_METHOD"] ?? "GET") === "POST"
 ) {
     access_gate_json_response(access_gate_request_code($pdo, $config));
+}
+
+if ($path === "/access/request-code") {
+    access_gate_json_response([
+        "ok" => false,
+        "message" => "Invalid request method. This endpoint only accepts POST.",
+    ]);
 }
 
 if (
@@ -45,6 +53,23 @@ if (
 ) {
     access_gate_json_response(access_gate_verify_code($pdo, $config));
 }
+
+if ($path === "/access/verify-code") {
+    access_gate_json_response([
+        "ok" => false,
+        "message" => "Invalid request method. This endpoint only accepts POST.",
+    ]);
+}
+
+/*
+ * Page cache only after access/admin/asset routes are handled.
+ */
+if (page_cache_try_serve($config, $path)) {
+    exit();
+}
+
+page_cache_start($config, $path);
+
 
 if ($path === "/access/magic-login") {
     if (access_gate_verify_magic_token($pdo, $config)) {

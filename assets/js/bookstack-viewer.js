@@ -1,3 +1,5 @@
+/* versio 1.0.3 */
+
 (function () {
     'use strict';
 
@@ -53,199 +55,210 @@
             + '; path=/; SameSite=Lax';
     }
 
-    /**
-     * Initialize the access gate overlay form.
-     *
-     * @return {void}
+/**
+ * Return whether this looks like a normal interactive browser.
+ *
+ * @return {boolean}
+ */
+function isKnownInteractiveBrowser() {
+    const userAgent = navigator.userAgent || '';
+
+    const knownBrowser = /Chrome|CriOS|Firefox|FxiOS|Safari|Edg|OPR|Opera/i.test(userAgent);
+    const knownBot = /bot|crawler|spider|slurp|bingpreview|google|bing|yandex|duckduck|baidu|semrush|ahrefs|mj12|curl|wget|python|php|validator|lighthouse|pagespeed/i.test(userAgent);
+
+    if (!knownBrowser || knownBot) {
+        return false;
+    }
+
+    return !!(window.fetch && window.URLSearchParams && document.addEventListener);
+}
+
+/**
+ * Initialize the access gate overlay form.
+ *
+ * @return {void}
+ */
+function initAccessGate() {
+    const overlay = document.getElementById('accessOverlay');
+
+    if (!overlay) {
+        return;
+    }
+
+    /*
+     * The overlay exists in HTML for normal browsers, but should only be
+     * activated for real interactive browsers.
      */
-    function initAccessGate() {
-        const overlay = document.getElementById('accessOverlay');
+    if (!isKnownInteractiveBrowser()) {
+        return;
+    }
 
-        if (!overlay) {
-            return;
-        }
+    overlay.hidden = false;
+    document.body.classList.add('access-gate-active');
 
-        document.body.classList.add('access-gate-active');
+    const emailForm = document.getElementById('accessEmailForm');
+    const codeForm = document.getElementById('accessCodeForm');
+    const emailInput = document.getElementById('accessEmail');
+    const codeInput = document.getElementById('accessCode');
+    const codeEmailInput = document.getElementById('accessCodeEmail');
+    const message = document.getElementById('accessMessage');
+    const resendButton = document.getElementById('accessResendButton');
 
-        const emailForm = document.getElementById('accessEmailForm');
-        const codeForm = document.getElementById('accessCodeForm');
-        const emailInput = document.getElementById('accessEmail');
-        const codeInput = document.getElementById('accessCode');
-        const codeEmailInput = document.getElementById('accessCodeEmail');
-        const message = document.getElementById('accessMessage');
-        const resendButton = document.getElementById('accessResendButton');
+    if (!emailForm || !codeForm || !emailInput || !codeInput || !codeEmailInput || !message) {
+        console.warn('Access gate form is incomplete.');
+        return;
+    }
 
-        if (!emailForm || !codeForm || !emailInput || !codeInput || !codeEmailInput || !message) {
-            return;
-        }
+    let resendCooldown = 0;
+    let resendTimer = null;
 
-        let resendCooldown = 0;
-        let resendTimer = null;
+    function setMessage(text, isError) {
+        message.textContent = text || '';
+        message.className = 'access-message' + (isError ? ' error' : ' success');
+    }
 
-        /**
-         * Show a status message.
-         *
-         * @param {string} text
-         * @param {boolean} isError
-         * @return {void}
-         */
-        function setMessage(text, isError) {
-            message.textContent = text || '';
-            message.className = 'access-message' + (isError ? ' error' : ' success');
-        }
+    async function postForm(url, data) {
+        const body = new URLSearchParams();
 
-        /**
-         * Send a form-encoded POST request.
-         *
-         * @param {string} url
-         * @param {Object} data
-         * @return {Promise<Object>}
-         */
-        async function postForm(url, data) {
-            const body = new URLSearchParams();
-
-            Object.keys(data).forEach(function (key) {
-                body.append(key, data[key]);
-            });
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-                },
-                body: body.toString(),
-                credentials: 'same-origin'
-            });
-
-            return await response.json();
-        }
-
-        /**
-         * Start the resend cooldown timer.
-         *
-         * @return {void}
-         */
-        function startResendCooldown() {
-            if (!resendButton) {
-                return;
-            }
-
-            resendCooldown = 30;
-            resendButton.disabled = true;
-            resendButton.textContent = 'Resend code (' + resendCooldown + ')';
-
-            if (resendTimer) {
-                clearInterval(resendTimer);
-            }
-
-            resendTimer = setInterval(function () {
-                resendCooldown--;
-
-                if (resendCooldown <= 0) {
-                    clearInterval(resendTimer);
-                    resendButton.disabled = false;
-                    resendButton.textContent = 'Resend code';
-                    return;
-                }
-
-                resendButton.textContent = 'Resend code (' + resendCooldown + ')';
-            }, 1000);
-        }
-
-        /**
-         * Request an access code email.
-         *
-         * @return {Promise<void>}
-         */
-        async function requestCode() {
-            const email = emailInput.value.trim();
-
-            if (!email) {
-                setMessage('Please enter your email address.', true);
-                return;
-            }
-
-            setMessage('Sending access email...', false);
-
-            try {
-                const result = await postForm('/access/request-code', {
-                    email: email,
-                    return_to: window.location.pathname + window.location.search
-                });
-
-                if (!result.ok) {
-                    setMessage(result.message || 'Could not send the access email.', true);
-                    return;
-                }
-
-                codeEmailInput.value = result.email || email;
-                codeForm.style.display = '';
-                codeInput.focus();
-
-                setMessage(result.message || 'Access email sent.', false);
-
-                if (resendButton) {
-                    startResendCooldown();
-                }
-            } catch (error) {
-                setMessage('Could not contact the server. Please try again.', true);
-            }
-        }
-
-        /**
-         * Verify a submitted access code.
-         *
-         * @return {Promise<void>}
-         */
-        async function verifyCode() {
-            const email = codeEmailInput.value.trim() || emailInput.value.trim();
-            const code = codeInput.value.trim();
-
-            if (!email || !code) {
-                setMessage('Please enter the code from your email.', true);
-                return;
-            }
-
-            setMessage('Verifying code...', false);
-
-            try {
-                const result = await postForm('/access/verify-code', {
-                    email: email,
-                    code: code
-                });
-
-                if (!result.ok) {
-                    setMessage(result.message || 'The code could not be verified.', true);
-                    return;
-                }
-
-                setMessage(result.message || 'Access granted.', false);
-                window.location.href = result.redirect || window.location.href;
-            } catch (error) {
-                setMessage('Could not contact the server. Please try again.', true);
-            }
-        }
-
-        emailForm.addEventListener('submit', function (event) {
-            event.preventDefault();
-            requestCode();
+        Object.keys(data).forEach(function (key) {
+            body.append(key, data[key]);
         });
 
-        codeForm.addEventListener('submit', function (event) {
-            event.preventDefault();
-            verifyCode();
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                'Accept': 'application/json'
+            },
+            body: body.toString(),
+            credentials: 'same-origin'
         });
 
-        if (resendButton) {
-            resendButton.addEventListener('click', function () {
-                if (resendCooldown > 0) {
-                    return;
-                }
+        const rawText = await response.text();
 
-                requestCode();
-            });
+        try {
+            return JSON.parse(rawText);
+        } catch (error) {
+            throw new Error('Server did not return JSON: ' + rawText.substring(0, 200));
         }
     }
+
+    function startResendCooldown() {
+        if (!resendButton) {
+            return;
+        }
+
+        resendCooldown = 30;
+        resendButton.disabled = true;
+        resendButton.textContent = 'Resend code (' + resendCooldown + ')';
+
+        if (resendTimer) {
+            clearInterval(resendTimer);
+        }
+
+        resendTimer = setInterval(function () {
+            resendCooldown--;
+
+            if (resendCooldown <= 0) {
+                clearInterval(resendTimer);
+                resendButton.disabled = false;
+                resendButton.textContent = 'Resend code';
+                return;
+            }
+
+            resendButton.textContent = 'Resend code (' + resendCooldown + ')';
+        }, 1000);
+    }
+
+    async function requestCode() {
+        const email = emailInput.value.trim();
+
+        if (!email) {
+            setMessage('Please enter your email address.', true);
+            return;
+        }
+
+        setMessage('Sending access email...', false);
+
+        try {
+            const result = await postForm('/access/request-code', {
+                email: email,
+                return_to: window.location.pathname + window.location.search
+            });
+
+            if (!result.ok) {
+                setMessage(result.message || 'Could not send the access email.', true);
+                return;
+            }
+
+            codeEmailInput.value = result.email || email;
+            codeForm.style.display = '';
+            codeInput.focus();
+
+            setMessage(result.message || 'Access email sent.', false);
+            startResendCooldown();
+        } catch (error) {
+            console.error(error);
+            setMessage('Could not contact the server. Please try again.', true);
+        }
+    }
+
+    async function verifyCode() {
+        const email = codeEmailInput.value.trim() || emailInput.value.trim();
+        const code = codeInput.value.trim();
+
+        if (!email || !code) {
+            setMessage('Please enter the code from your email.', true);
+            return;
+        }
+
+        setMessage('Verifying code...', false);
+
+        try {
+            const result = await postForm('/access/verify-code', {
+                email: email,
+                code: code
+            });
+
+            if (!result.ok) {
+                setMessage(result.message || 'The code could not be verified.', true);
+                return;
+            }
+
+            setMessage(result.message || 'Access granted.', false);
+            //window.location.href = result.redirect || window.location.href;
+	   const redirectUrl = result.redirect || window.location.pathname + window.location.search;
+           const separator = redirectUrl.indexOf('?') === -1 ? '?' : '&';
+ 
+           window.location.href = redirectUrl + separator + 'access_verified=' + Date.now();
+        } catch (error) {
+            console.error(error);
+            setMessage('Could not contact the server. Please try again.', true);
+        }
+    }
+
+    emailForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        requestCode();
+    });
+
+    codeForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        verifyCode();
+    });
+
+    if (resendButton) {
+        resendButton.addEventListener('click', function () {
+            if (resendCooldown > 0) {
+                return;
+            }
+
+            requestCode();
+        });
+    }
+}
+
+//--
 
     /**
      * Initialize collapse/expand behavior for books in the documentation tree.
@@ -469,3 +482,4 @@
         initDocTreeResizer();
     });
 })();
+

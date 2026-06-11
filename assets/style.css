@@ -1,3 +1,5 @@
+/* version 1.0.2 */
+
 :root {
     --bg: #f4f6f8;
     --panel: #ffffff;
@@ -735,6 +737,15 @@ button:hover {
     padding: 24px;
     background: rgba(8, 31, 47, 0.72);
     backdrop-filter: blur(4px);
+}
+
+.access-overlay[hidden] {
+    display: none !important;
+}
+
+body.access-gate-active .doc-body,
+body.access-gate-active .doc-page {
+    filter: blur(2px);
 }
 
 .access-card {

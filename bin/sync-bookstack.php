@@ -28,6 +28,7 @@ $rootDir = dirname(__DIR__);
 $config = require $rootDir . '/app/config.php';
 
 require_once $rootDir . '/app/helpers.php';
+require_once $rootDir . '/app/page_cache.php';
 
 if (is_file($rootDir . '/app/db.php')) {
     require_once $rootDir . '/app/db.php';
@@ -1941,3 +1942,8 @@ echo '  - Page ID '
 }
 
 run_sync($config);
+
+if (function_exists('page_cache_clear')) {
+    $deletedCachedPages = page_cache_clear($config);
+    echo "Cleared {$deletedCachedPages} cached page(s)." . PHP_EOL;
+}

@@ -263,7 +263,33 @@ function asset_proxy_absolute_source_url(string $url, array $page, array $config
 }
 
 /**
+ * Return a safe filename from a source URL.
+ *
+ * @param string $sourceUrl
+ * @return string
+ */
+function asset_proxy_source_filename(string $sourceUrl): string
+{
+    $path = parse_url($sourceUrl, PHP_URL_PATH);
+    $filename = is_string($path) ? basename($path) : '';
+
+    $filename = rawurldecode($filename);
+    $filename = preg_replace('/[^a-zA-Z0-9._-]+/', '-', $filename) ?? '';
+    $filename = trim($filename, '.-_');
+
+    if ($filename === '') {
+        $extension = asset_proxy_url_extension($sourceUrl);
+        $filename = $extension !== '' ? 'asset.' . $extension : 'asset.bin';
+    }
+
+    return $filename;
+}
+
+/**
  * Build a local public proxy URL for an original source URL.
+ *
+ * Format:
+ * /asset-proxy/{hash}/{filename}
  *
  * @param string $sourceUrl
  * @param array $config
@@ -271,11 +297,59 @@ function asset_proxy_absolute_source_url(string $url, array $page, array $config
  */
 function asset_proxy_public_url(string $sourceUrl, array $config): string
 {
-    return asset_proxy_path($config) . '?u=' . rawurlencode(asset_proxy_base64url_encode($sourceUrl));
+    asset_proxy_register_public_url($sourceUrl, $config);
+
+    $hash = substr(hash('sha256', $sourceUrl), 0, 16);
+    $filename = asset_proxy_source_filename($sourceUrl);
+
+    return asset_proxy_path($config) . '/' . $hash . '/' . rawurlencode($filename);
+}
+
+/**
+ * Store a public hash to original source URL mapping.
+ *
+ * This is created when HTML is rendered and later used when the browser
+ * requests /asset-proxy/{hash}/{filename}.
+ *
+ * @param string $sourceUrl
+ * @param array $config
+ * @return void
+ */
+function asset_proxy_register_public_url(string $sourceUrl, array $config): void
+{
+    $cacheDir = asset_proxy_cache_dir($config);
+
+    if (!is_dir($cacheDir)) {
+        @mkdir($cacheDir, 0750, true);
+    }
+
+    $publicHash = substr(hash('sha256', $sourceUrl), 0, 16);
+    $mapPath = $cacheDir . '/' . $publicHash . '.url.json';
+
+    if (is_file($mapPath)) {
+        return;
+    }
+
+    $data = [
+        'source_url' => $sourceUrl,
+        'filename' => asset_proxy_source_filename($sourceUrl),
+        'created_at' => date('c'),
+    ];
+
+    @file_put_contents(
+        $mapPath,
+        json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+    );
 }
 
 /**
  * Rewrite one URL value to the local proxy if it is allowed.
+ *
+ * Images must also be rewritten when they appear in normal links, for example:
+ *
+ * <a href="https://docs.cocos.software/uploads/images/example.png">
+ *     <img src="https://docs.cocos.software/uploads/images/scaled/example.png">
+ * </a>
  *
  * @param string $url
  * @param array $page
@@ -299,16 +373,28 @@ function asset_proxy_rewrite_url(string $url, array $page, array $config, bool $
         return $url;
     }
 
+    /*
+     * In an image context, always proxy allowed source URLs.
+     */
     if ($isImageContext) {
         return asset_proxy_public_url($absoluteUrl, $config);
     }
 
-    if (asset_proxy_is_document_url($absoluteUrl, $config)) {
+    /*
+     * In normal link context, proxy both documents and direct image links.
+     * BookStack often wraps an image in an <a href=""> pointing to the
+     * original full-size image.
+     */
+    if (
+        asset_proxy_is_document_url($absoluteUrl, $config) ||
+        asset_proxy_is_image_url($absoluteUrl, $config)
+    ) {
         return asset_proxy_public_url($absoluteUrl, $config);
     }
 
     return $url;
 }
+
 
 /**
  * Rewrite srcset URLs.
@@ -626,12 +712,57 @@ function asset_proxy_read_meta(string $metaPath, string $sourceUrl): array
 }
 
 /**
+ * Resolve the source URL from a pretty proxy path.
+ *
+ * @param string $path
+ * @param array $config
+ * @return string
+ */
+function asset_proxy_source_url_from_path(string $path, array $config): string
+{
+    $proxyPath = asset_proxy_path($config);
+    $relative = trim(substr($path, strlen($proxyPath)), '/');
+
+    /*
+     * Backward compatibility:
+     * /asset-proxy?u=...
+     */
+    if ($relative === '') {
+        $encodedUrl = (string)($_GET['u'] ?? '');
+        return asset_proxy_base64url_decode($encodedUrl);
+    }
+
+    $parts = explode('/', $relative, 2);
+    $publicHash = $parts[0] ?? '';
+
+    if (!preg_match('/^[a-f0-9]{16}$/', $publicHash)) {
+        return '';
+    }
+
+    $mapPath = asset_proxy_cache_dir($config) . '/' . $publicHash . '.url.json';
+
+    if (!is_file($mapPath)) {
+        return '';
+    }
+
+    $json = file_get_contents($mapPath);
+    $data = is_string($json) ? json_decode($json, true) : null;
+
+    if (!is_array($data) || empty($data['source_url'])) {
+        return '';
+    }
+
+    return (string)$data['source_url'];
+}
+
+/**
  * Serve the proxied asset request.
  *
  * @param array $config
+ * @param string|null $path
  * @return void
  */
-function asset_proxy_handle_request(array $config): void
+function asset_proxy_handle_request(array $config, ?string $path = null): void
 {
     if (!asset_proxy_enabled($config)) {
         http_response_code(404);
@@ -639,8 +770,10 @@ function asset_proxy_handle_request(array $config): void
         return;
     }
 
-    $encodedUrl = (string)($_GET['u'] ?? '');
-    $sourceUrl = asset_proxy_base64url_decode($encodedUrl);
+    $sourceUrl = asset_proxy_source_url_from_path(
+        $path ?? asset_proxy_path($config),
+        $config
+    );
 
     if ($sourceUrl === '' || !asset_proxy_is_allowed_source_url($sourceUrl, $config)) {
         http_response_code(400);

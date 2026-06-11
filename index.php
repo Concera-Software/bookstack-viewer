@@ -14,6 +14,9 @@ require __DIR__ . "/app/page_repository.php";
 require __DIR__ . "/app/asset_proxy.php";
 require __DIR__ . "/app/link_rewriter.php";
 
+// admin includes
+require __DIR__ . "/app/admin/session_management.php";
+
 redirect_to_base_url_if_needed($config);
 access_gate_start_session($config);
 
@@ -25,6 +28,44 @@ $GLOBALS["config"] = $config;
 $path = parse_url($_SERVER["REQUEST_URI"] ?? "/", PHP_URL_PATH) ?: "/";
 $path = "/" . trim($path, "/");
 $path = $path === "/" ? "/" : rtrim($path, "/");
+
+$currentIp = function_exists('access_gate_ip_address')
+    ? access_gate_ip_address()
+    : (string)($_SERVER['REMOTE_ADDR'] ?? '');
+
+if (function_exists('admin_ip_is_blocked') && admin_ip_is_blocked($pdo, $currentIp)) {
+    http_response_code(403);
+    render_layout(
+        $config,
+        "Access blocked",
+        "Your IP address is blocked.",
+        '<div class="empty-state">Access blocked.</div>',
+        $path
+    );
+    exit();
+}
+
+if (function_exists('admin_current_session_is_revoked') && admin_current_session_is_revoked($pdo)) {
+    unset(
+        $_SESSION['manual_access_email'],
+        $_SESSION['manual_access_verified_until'],
+        $_SESSION['manual_access_pending_email']
+    );
+
+    http_response_code(403);
+    render_layout(
+        $config,
+        "Session revoked",
+        "Your session has been revoked.",
+        '<div class="empty-state">Your session has been revoked. Please request access again.</div>',
+        $path
+    );
+    exit();
+}
+
+if (function_exists('admin_track_current_session')) {
+    admin_track_current_session($pdo, $config);
+}
 
 if (
     $path === asset_proxy_path($config) ||
@@ -70,6 +111,12 @@ if ($path === "/access/verify-code") {
 if ($path === "/admin/hidden-pages") {
     require __DIR__ . "/app/admin/blocked_pages.php";
 }
+
+if ($path === "/admin/sessions") {
+    require __DIR__ . "/app/admin/sessions.php";
+}
+
+
 
 /*
  * Page cache only after access/admin/asset routes are handled.

@@ -147,6 +147,26 @@ function admin_tree_pages(array $config): array
             'description' => 'Admin overview of hidden and blocked documentation pages.',
             'updated_at' => '',
         ],
+[
+    'id' => -900002,
+    'source_key' => 'admin',
+    'source_page_id' => 0,
+    'page_name' => 'Session management',
+    'page_slug' => 'sessions',
+    'book_id' => -900001,
+    'book_name' => 'Admin',
+    'book_slug' => 'admin',
+    'book_url' => '/admin/hidden-pages',
+    'chapter_id' => -900001,
+    'chapter_name' => 'Administration',
+    'chapter_slug' => 'administration',
+    'url_path' => '/admin/sessions',
+    'html' => '',
+    'text_content' => '',
+    'description' => 'Admin session management.',
+    'updated_at' => '',
+],
+
     ];
 }
 

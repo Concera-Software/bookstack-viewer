@@ -167,6 +167,69 @@ function can_manage_page_exclusions(array $config, ?string $sourceKey = null): b
 }
 
 /**
+ * Return configured administrator email addresses.
+ *
+ * @param array $config
+ * @return array
+ */
+function admin_email_addresses(array $config): array
+{
+    $emails = $config['admin_emails'] ?? [];
+
+    if (!is_array($emails)) {
+        return [];
+    }
+
+    $clean = [];
+
+    foreach ($emails as $email) {
+        $email = mb_strtolower(trim((string)$email));
+
+        if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $clean[] = $email;
+        }
+    }
+
+    return array_values(array_unique($clean));
+}
+
+/**
+ * Return the currently verified access-gate email address.
+ *
+ * @return string
+ */
+function current_verified_access_email(): string
+{
+    return mb_strtolower(trim((string)($_SESSION['manual_access_email'] ?? '')));
+}
+
+/**
+ * Check whether the current visitor may access admin pages.
+ *
+ * Admin access requires both:
+ * - allowed admin IP
+ * - verified access-gate email listed in admin_emails
+ *
+ * @param array $config
+ * @param ?string $sourceKey
+ * @return bool
+ */
+function can_access_admin_pages(array $config, ?string $sourceKey = null): bool
+{
+    if (!can_manage_page_exclusions($config, $sourceKey)) {
+        return false;
+    }
+
+    $email = current_verified_access_email();
+
+    if ($email === '') {
+        return false;
+    }
+
+    return in_array($email, admin_email_addresses($config), true);
+}
+
+/**
  * Source-configured hidden page IDs.
  *
  * These are treated as default hidden pages. A DB record with excluded=0
@@ -338,7 +401,7 @@ function page_visible_to_current_ip(PDO $pdo, array $config, array $page): bool
         return true;
     }
 
-    return can_manage_page_exclusions($config, $sourceKey);
+    return can_access_admin_pages($config, $sourceKey);
 }
 
 
@@ -385,7 +448,7 @@ function render_page_visibility_toggle(PDO $pdo, array $config, array $page): st
         return '';
     }
 
-    if (!can_manage_page_exclusions($config, $sourceKey)) {
+    if (!can_access_admin_pages($config, $sourceKey)) {
         return '';
     }
 

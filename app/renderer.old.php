@@ -442,7 +442,8 @@ function render_book_tree(array $pages, ?int $activePageId = null, array $active
         $html .= '<button type="button" class="tree-book-toggle" aria-label="Collapse or expand book" aria-expanded="true">';
         $html .= '<span class="tree-book-toggle-icon">▾</span>';
         $html .= '</button>';
-        $html .= '<a class="tree-book-title" href="/books/' . e($bookSlug) . '">';
+//        $html .= '<a class="tree-book-title" href="/books/' . e($bookSlug) . '">';
+        $html .= '<a class="tree-book-title" href="' . e((string)$book['url']) . '">';
         $html .= e($bookName);
         $html .= '</a>';
         $html .= '</div>';
@@ -535,56 +536,6 @@ function render_book_tree(array $pages, ?int $activePageId = null, array $active
     return $html;
 }
 
-/**
- * Render the wiki-style navigation tree.
- *
- * @param array $pages
- * @param ?int $activePageId
- * @param array $activeHeadings
- * @return string
- */
-function render_book_tree_old(array $pages, ?int $activePageId = null, array $activeHeadings = []): string
-{
-    if (!$pages) {
-        return '<aside class="doc-tree"><p>No pages found.</p></aside>';
-    }
-
-    $bookName = $pages[0]['book_name'] ?: 'Book';
-    $bookSlug = $pages[0]['book_slug'] ?: '';
-
-    $html = '<aside class="doc-tree">';
-    $html .= '<div class="tree-title">';
-    $html .= $bookSlug !== ''
-        ? '<a href="/books/' . e($bookSlug) . '">' . e($bookName) . '</a>'
-        : e($bookName);
-    $html .= '</div>';
-
-    $html .= '<nav aria-label="Documentation navigation">';
-    $html .= '<ul class="tree-root">';
-
-    $currentChapter = null;
-    $chapterOpen = false;
-
-    foreach ($pages as $page) {
-        $chapterName = $page['chapter_name'] ?: 'Pages';
-        $isActive = ((int)$page['id'] === (int)$activePageId);
-
-        if ($chapterName !== $currentChapter) {
-            if ($chapterOpen) {
-                $html .= '</ul></li>';
-            }
-
-            $currentChapter = $chapterName;
-            $chapterOpen = true;
-
-            $html .= '<li class="tree-chapter">';
-            $html .= '<span class="tree-chapter-title">' . e($chapterName) . '</span>';
-            $html .= '<ul class="tree-pages">';
-        }
-
-//        $html .= '<li class="tree-page' . ($isActive ? ' active' : '') . '">';
-//        $html .= '<a href="' . e($page['url_path']) . '">' . e($page['page_name']) . '</a>';
-
 $isHidden = false;
 
 if (
@@ -620,30 +571,36 @@ if ($isHidden) {
 $html .= '</a>';
 
 
-        if ($isActive && $activeHeadings) {
-            $html .= '<ul class="tree-headings">';
+                if ($isActive && $activeHeadings) {
+                    $html .= '<ul class="tree-headings">';
 
-            foreach ($activeHeadings as $heading) {
-                $level = max(1, min(6, (int)$heading['level']));
-                $html .= '<li class="tree-heading level-' . $level . '">';
-                $html .= '<a href="#' . e($heading['id']) . '">' . e($heading['text']) . '</a>';
+                    foreach ($activeHeadings as $heading) {
+                        $level = max(1, min(6, (int)$heading['level']));
+
+                        $html .= '<li class="tree-heading level-' . $level . '">';
+                        $html .= '<a href="#' . e((string)$heading['id']) . '">' . e((string)$heading['text']) . '</a>';
+                        $html .= '</li>';
+                    }
+
+                    $html .= '</ul>';
+                }
+
                 $html .= '</li>';
             }
 
             $html .= '</ul>';
+            $html .= '</li>';
         }
 
+        $html .= '</ul>';
         $html .= '</li>';
-    }
-
-    if ($chapterOpen) {
-        $html .= '</ul></li>';
     }
 
     $html .= '</ul>';
     $html .= '</nav>';
     $html .= '</aside>';
 
+//    $html .= add_collapse_javascirpt();
     return $html;
 }
 
@@ -747,3 +704,4 @@ $pendingEmail = htmlspecialchars(
 </div>
 ';
 }
+

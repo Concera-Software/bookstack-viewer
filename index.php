@@ -67,8 +67,8 @@ if ($path === "/access/verify-code") {
  *
  * Shows all soft-hidden pages and hard-blocked pages for admin IPs only.
  */
-if ($path === "/admin/hidden-pages") {
-	require __DIR__ . "/app/admin/blocked_pages.php";
+if ($path === "/app/admin/hidden-pages") {
+    require __DIR__ . "/app/admin/blocked_pages.php";
 }
 
 /*
@@ -137,7 +137,7 @@ if (
         exit();
     }
 
-    if (!can_manage_page_exclusions($config, $sourceKey)) {
+    if (!can_access_admin_pages($config, $sourceKey)) {
         http_response_code(403);
         echo "Forbidden";
         exit();
@@ -844,8 +844,8 @@ $activeHeadings = extract_headings($pageHtml);
 
     if (
         $sourceUrl &&
-        function_exists("can_manage_page_exclusions") &&
-        can_manage_page_exclusions(
+        function_exists("can_access_admin_pages") &&
+        can_access_admin_pages(
             $config,
             (string) ($page["source_key"] ?? "")
         )

@@ -113,6 +113,44 @@ function fetch_all_tree_pages(PDO $pdo): array
 }
 
 /**
+ * Return synthetic admin pages for the documentation tree.
+ *
+ * @param array $config
+ * @return array
+ */
+function admin_tree_pages(array $config): array
+{
+    if (
+        !function_exists('can_access_admin_pages') ||
+        !can_access_admin_pages($config, null)
+    ) {
+        return [];
+    }
+
+    return [
+        [
+            'id' => -900001,
+            'source_key' => 'admin',
+            'source_page_id' => 0,
+            'page_name' => 'Hidden and blocked pages',
+            'page_slug' => 'hidden-pages',
+            'book_id' => -900001,
+            'book_name' => 'Admin',
+            'book_slug' => 'admin',
+            'book_url' => '/admin/hidden-pages',
+            'chapter_id' => -900001,
+            'chapter_name' => 'Administration',
+            'chapter_slug' => 'administration',
+            'url_path' => '/admin/hidden-pages',
+            'html' => '',
+            'text_content' => '',
+            'description' => 'Admin overview of hidden and blocked documentation pages.',
+            'updated_at' => '',
+        ],
+    ];
+}
+
+/**
  * Return the pages that should be shown in the left documentation tree.
  *
  * @param PDO $pdo
@@ -125,11 +163,15 @@ function fetch_tree_pages(
     array $config,
     string $currentBookSlug
 ): array {
-    if (!empty($config["doc_tree_show_all_books"])) {
-        return fetch_all_tree_pages($pdo);
-    }
 
-    return fetch_book_pages($pdo, $currentBookSlug);
+if (!empty($config["doc_tree_show_all_books"])) {
+    $pages = fetch_all_tree_pages($pdo);
+} else {
+    $pages = fetch_book_pages($pdo, $currentBookSlug);
+}
+
+return array_merge($pages, admin_tree_pages($config));
+
 }
 
 /**

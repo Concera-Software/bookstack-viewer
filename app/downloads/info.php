@@ -2,9 +2,15 @@
 
 declare(strict_types=1);
 
-if (!str_starts_with($path, "/downloads/info/")) {
+if (!preg_match('#^/downloads/info/([^/]+)/([^/]+)$#', $path, $match)) {
     return;
 }
+
+$categorySlug = rawurldecode($match[1]);
+$infoSlug = rawurldecode($match[2]);
+
+$download = downloads_find_by_info_slug($config, $categorySlug, $infoSlug);
+
 
 if (!downloads_access_is_verified($config)) {
     $content = '<article class="doc-page">';
@@ -30,9 +36,6 @@ if (!downloads_access_is_verified($config)) {
 
     exit();
 }
-
-$key = rawurldecode(substr($path, strlen("/downloads/info/")));
-$download = downloads_find($config, $key);
 
 if (!$download || empty($download['md_path']) || !is_file((string)$download['md_path'])) {
     http_response_code(404);

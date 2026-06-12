@@ -220,7 +220,7 @@ function download_tree_pages(array $config): array
             'id' => -800000,
             'source_key' => 'downloads',
             'source_page_id' => 0,
-            'page_name' => 'Downloads',
+            'page_name' => 'All Downloads',
             'page_slug' => 'downloads',
             'book_id' => -800000,
             'book_name' => 'Downloads',

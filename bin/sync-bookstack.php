@@ -1377,7 +1377,7 @@ function generate_sitemap(PDO $public, array $config): int
         throw new RuntimeException('Missing config value: base_url');
     }
 
-    $sitemapPath = dirname(__DIR__) . '/sitemap.xml';
+    $sitemapPath = dirname(__DIR__) . '/sitemap.pages.xml';
 
     /*
      * Build hard-exclusion conditions from bookstack_sources[].exclude_page_ids.
@@ -1527,7 +1527,7 @@ function generate_sitemap(PDO $public, array $config): int
     $xml .= '</urlset>' . PHP_EOL;
 
     if (file_put_contents($sitemapPath, $xml) === false) {
-        throw new RuntimeException('Could not write sitemap.xml to: ' . $sitemapPath);
+        throw new RuntimeException('Could not write sitemap.pages.xml to: ' . $sitemapPath);
     }
 
     apply_generated_file_permissions($sitemapPath, $config);
@@ -1535,34 +1535,6 @@ function generate_sitemap(PDO $public, array $config): int
     return count($urls);
 }
 
-
-/**
- * Generate robots.txt pointing to sitemap.xml.
- *
- * @param array $config
- * @return void
- */
-function generate_robots_txt(array $config): void
-{
-    $baseUrl = rtrim((string)($config['base_url'] ?? ''), '/');
-
-    if ($baseUrl === '') {
-        throw new RuntimeException('Missing config value: base_url');
-    }
-
-    $robotsPath = dirname(__DIR__) . '/robots.txt';
-
-    $content = 'User-agent: *' . PHP_EOL;
-    $content .= 'Allow: /' . PHP_EOL;
-    $content .= PHP_EOL;
-    $content .= 'Sitemap: ' . $baseUrl . '/sitemap.xml' . PHP_EOL;
-
-    if (file_put_contents($robotsPath, $content) === false) {
-        throw new RuntimeException('Could not write robots.txt to: ' . $robotsPath);
-    }
-
-    apply_generated_file_permissions($robotsPath, $config);
-}
 
 /**
  * Prepare the insert statement for public_docs.
@@ -1923,13 +1895,11 @@ echo '  - Page ID '
         $public->commit();
 
         $sitemapUrlCount = generate_sitemap($public, $config);
-        generate_robots_txt($config);
 
         echo 'Synced sources: ' . $sourceCount . PHP_EOL;
         echo 'Synced total public/manual pages: ' . $totalPages . PHP_EOL;
         echo 'Generated sitemap URLs: ' . $sitemapUrlCount . PHP_EOL;
-        echo 'Generated sitemap: ' . dirname(__DIR__) . '/sitemap.xml' . PHP_EOL;
-        echo 'Generated robots.txt: ' . dirname(__DIR__) . '/robots.txt' . PHP_EOL;
+        echo 'Generated sitemap: ' . dirname(__DIR__) . '/sitemap.pages.xml' . PHP_EOL;
     } catch (Throwable $e) {
         if ($public->inTransaction()) {
             $public->rollBack();

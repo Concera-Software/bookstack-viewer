@@ -1,5 +1,48 @@
 <?php
 
+/*
+  ___           _       _           _    __   ___
+ | _ ) ___  ___| |__ __| |_ __ _ __| |__ \ \ / (_)_____ __ _____ _ _
+ | _ \/ _ \/ _ \ / /(_-<  _/ _` / _| / /  \ V /| / -_) V  V / -_) '_|
+ |___/\___/\___/_\_\/__/\__\__,_\__|_\_\   \_/ |_\___|\_/\_/\___|_|
+
+--------------------------------------------------------------------------
+
+Version       : 1.0.0
+Creation date : 2026/06/09
+Authors       : we & ai
+P.o.o.	      : concera, the netherlands.
+
+--------------------------------------------------------------------------
+
+Bookstack Viewer is a tool created by Concera using AI. The code has not
+been cleaned up; it looks like AI generated it after a lot of prompting
+and even more refinement. Sure, it works, but is it clean and maintainable
+code? No. Is it secure? We do not know yet; we are still figuring that out.
+
+We needed an environment that could facilitate a single manuals platform,
+populated with data from several BookStack servers. In addition, we needed
+a place where verified clients could download applications.
+
+We are still tweaking, prompting, testing, and investigating whether AI
+can be a solid partner in generating code. We are positive about the
+possibilities, but we also know that the human touch is still needed:
+review, verification, creativity, and a lot of patience.
+
+AI is the future, and we embrace it, but we do not blindly trust
+everything AI gives us.
+
+This is a first test and a first experience. Nothing more, nothing less.
+
+Use the code, improve it, and let AI help you, but do not ask us for
+support or warranties, because for this code, there are none.
+
+Have fun!
+
+--------------------------------------------------------------------------
+
+*/
+
 declare(strict_types=1);
 
 $config = require __DIR__ . "/app/config.php";
@@ -602,6 +645,37 @@ if ($path === "/sitemap.xml") {
 
         echo "</url>";
     }
+
+/*
+ * Download information pages.
+ *
+ * Only downloads with a matching .md/.MD info file are added.
+ * ZIP files without an info page are not added to the sitemap.
+ */
+if (
+    function_exists("downloads_enabled") &&
+    function_exists("downloads_scan") &&
+    downloads_enabled($config)
+) {
+    foreach (downloads_scan($config) as $download) {
+        if (empty($download["info_url"])) {
+            continue;
+        }
+
+        echo "<url>";
+        echo "<loc>" .
+            e(canonical_url($config, (string)$download["info_url"])) .
+            "</loc>";
+
+        if (!empty($download["updated_at"])) {
+            echo "<lastmod>" .
+                e(date("c", (int)$download["updated_at"])) .
+                "</lastmod>";
+        }
+
+        echo "</url>";
+    }
+}
 
     echo "</urlset>";
     exit();

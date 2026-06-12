@@ -3,6 +3,24 @@
 declare(strict_types=1);
 
 /**
+ * Return a safe local return path.
+ *
+ * @param string $value
+ * @param string $fallback
+ * @return string
+ */
+function downloads_safe_return_to(string $value, string $fallback = '/downloads'): string
+{
+    $value = trim($value);
+
+    if ($value === '' || $value[0] !== '/' || str_starts_with($value, '//')) {
+        return $fallback;
+    }
+
+    return $value;
+}
+
+/**
  * Download section.
  *
  * Rules:
@@ -49,7 +67,7 @@ function downloads_enabled(array $config): bool
  */
 function downloads_root(array $config): string
 {
-    return rtrim((string)($config['downloads_path'] ?? (__DIR__ . '/../downloads')), '/');
+    return rtrim((string)($config['downloads_path'] ?? (__DIR__ . '/../repository')), '/');
 }
 
 /**
@@ -150,6 +168,62 @@ function downloads_find_markdown_info_file(string $rootReal, string $dir, string
  * @param array $config
  * @return array
  */
+
+
+
+/**
+ * Find a download by public info URL slugs.
+ *
+ * @param array $config
+ * @param string $categorySlug
+ * @param string $infoSlug
+ * @return ?array
+ */
+function downloads_find_by_info_slug(array $config, string $categorySlug, string $infoSlug): ?array
+{
+    $categorySlug = trim($categorySlug);
+    $infoSlug = trim($infoSlug);
+
+    if ($categorySlug === '' || $infoSlug === '') {
+        return null;
+    }
+
+    foreach (downloads_scan($config) as $download) {
+        if (
+            (string)($download['category_slug'] ?? '') === $categorySlug &&
+            (string)($download['info_slug'] ?? '') === $infoSlug
+        ) {
+            return $download;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Scan downloads.
+ *
+ * Returns:
+ * [
+ *   [
+ *     category => string,
+ *     category_slug => string,
+ *     title => string,
+ *     filename => string,
+ *     relative_path => string,
+ *     download_key => string,
+ *     download_url => string,
+ *     info_slug => string,
+ *     info_url => ?string,
+ *     md_path => ?string,
+ *     size_bytes => int,
+ *     updated_at => int,
+ *   ]
+ * ]
+ *
+ * @param array $config
+ * @return array
+ */
 function downloads_scan(array $config): array
 {
     $root = downloads_root($config);
@@ -178,6 +252,10 @@ function downloads_scan(array $config): array
             continue;
         }
 
+        /*
+         * Only ZIP files are downloadable.
+         * This is case-insensitive, so .zip and .ZIP both work.
+         */
         if (mb_strtolower($file->getExtension()) !== 'zip') {
             continue;
         }
@@ -188,11 +266,33 @@ function downloads_scan(array $config): array
             continue;
         }
 
-        $relative = str_replace('\\', '/', substr($fullPath, strlen($rootReal) + 1));
+        //$relative = str_replace('\\', '/', substr($fullPath, strlen($rootReal) + 1));
+        //
+        //if (!download_relative_path_is_safe($relative)) {
+        //    continue;
+        //}
 
-        if (!download_relative_path_is_safe($relative)) {
-            continue;
-        }
+$relative = str_replace('\\', '/', substr($fullPath, strlen($rootReal) + 1));
+
+/*
+ * Never list or serve downloads from hidden folders.
+ *
+ * Any folder named ".hidden" anywhere below the downloads root is ignored.
+ *
+ * Examples:
+ * - downloads/.hidden/file.zip
+ * - downloads/tools/.hidden/file.zip
+ * - downloads/tools/.hidden/archive/file.zip
+ */
+$relativeParts = explode('/', $relative);
+
+if (in_array('.hidden', $relativeParts, true)) {
+    continue;
+}
+
+if (!download_relative_path_is_safe($relative)) {
+    continue;
+}
 
         $dir = trim(str_replace('\\', '/', dirname($relative)), '.');
 
@@ -207,10 +307,53 @@ function downloads_scan(array $config): array
 
         $filename = basename($relative);
         $basename = pathinfo($filename, PATHINFO_FILENAME);
-	$mdPath = downloads_find_markdown_info_file($rootReal, $dir, $basename);
-	$hasInfo = $mdPath !== null;
 
+        /*
+         * Find an optional Markdown info file with the same basename.
+         *
+         * Supported examples:
+         * - file.md
+         * - file.MD
+         * - file.Md
+         * - file.mD
+         */
+        $mdPath = null;
+
+        $mdCandidates = [
+            $basename . '.md',
+            $basename . '.MD',
+            $basename . '.Md',
+            $basename . '.mD',
+        ];
+
+        foreach ($mdCandidates as $mdFilename) {
+            $mdRelative = ($dir !== '' && $dir !== '/')
+                ? $dir . '/' . $mdFilename
+                : $mdFilename;
+
+            $candidatePath = $rootReal . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $mdRelative);
+
+            if (is_file($candidatePath)) {
+                $mdPath = $candidatePath;
+                break;
+            }
+        }
+
+        $hasInfo = $mdPath !== null;
+
+        /*
+         * Internal key remains the real relative ZIP path.
+         * This is used for verification and file download handling.
+         */
         $key = $relative;
+
+        /*
+         * Public SEO URL uses safe slugs, not the real filename.
+         *
+         * Example:
+         * /downloads/info/virtual-machines/cocos-v5-0-26-b24359-3-hyper-v
+         */
+        $infoSlug = download_slug($basename);
 
         $items[] = [
             'category' => $category,
@@ -220,7 +363,10 @@ function downloads_scan(array $config): array
             'relative_path' => $relative,
             'download_key' => $key,
             'download_url' => '/downloads/request?file=' . rawurlencode($key),
-            'info_url' => $hasInfo ? '/downloads/info/' . rawurlencode($key) : null,
+            'info_slug' => $infoSlug,
+            'info_url' => $hasInfo
+                ? '/downloads/info/' . rawurlencode($categorySlug) . '/' . rawurlencode($infoSlug)
+                : null,
             'md_path' => $hasInfo ? $mdPath : null,
             'size_bytes' => (int)$file->getSize(),
             'updated_at' => (int)$file->getMTime(),
@@ -233,6 +379,7 @@ function downloads_scan(array $config): array
 
     return $items;
 }
+
 
 /**
  * Group downloads by category.
@@ -270,6 +417,10 @@ function downloads_group_by_category(array $downloads): array
  */
 function downloads_find(array $config, string $key): ?array
 {
+    if (in_array('.hidden', explode('/', str_replace('\\', '/', $key)), true)) {
+        return null;
+    }
+
     foreach (downloads_scan($config) as $download) {
         if (hash_equals((string)$download['download_key'], $key)) {
             return $download;
@@ -559,8 +710,11 @@ function downloads_verify_code(PDO $pdo, array $config, array $download, string 
  */
 function downloads_render_button(array $download): string
 {
+    $returnTo = downloads_safe_return_to((string)($_SERVER['REQUEST_URI'] ?? '/downloads'));
+
     return '<form method="post" action="/downloads/request" class="inline-admin-form">'
         . '<input type="hidden" name="file" value="' . e((string)$download['download_key']) . '">'
+        . '<input type="hidden" name="return_to" value="' . e($returnTo) . '">'
         . '<button type="submit">Download</button>'
         . '</form>';
 }

@@ -13,6 +13,7 @@ require __DIR__ . "/app/exclusions.php";
 require __DIR__ . "/app/page_repository.php";
 require __DIR__ . "/app/asset_proxy.php";
 require __DIR__ . "/app/link_rewriter.php";
+require __DIR__ . "/app/downloads.php";
 
 // admin includes
 require __DIR__ . "/app/admin/session_management.php";
@@ -104,6 +105,30 @@ if ($path === "/access/verify-code") {
     ]);
 }
 
+/** 
+ * Route : Downloads
+ */
+
+if ($path === "/downloads") {
+    require __DIR__ . "/app/downloads/index.php";
+}
+
+if (str_starts_with($path, "/downloads/category/")) {
+    require __DIR__ . "/app/downloads/index.php";
+}
+
+if (str_starts_with($path, "/downloads/info/")) {
+    require __DIR__ . "/app/downloads/info.php";
+}
+
+if ($path === "/downloads/request") {
+    require __DIR__ . "/app/downloads/request.php";
+}
+
+if ($path === "/downloads/verify") {
+    require __DIR__ . "/app/downloads/verify.php";
+}
+
 /**
  * Route: Admin hidden/blocked pages overview.
  *
@@ -124,6 +149,8 @@ if ($path === "/admin/sessions") {
 if ($path === "/admin/users") {
     require __DIR__ . "/app/admin/users.php";
 }
+
+
 
 
 /*

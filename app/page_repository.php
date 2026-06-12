@@ -209,6 +209,67 @@ function admin_tree_pages(array $config): array
     ];
 }
 
+function download_tree_pages(array $config): array
+{
+    if (!function_exists('downloads_enabled') || !downloads_enabled($config)) {
+        return [];
+    }
+
+    $pages = [
+        [
+            'id' => -800000,
+            'source_key' => 'downloads',
+            'source_page_id' => 0,
+            'page_name' => 'Downloads',
+            'page_slug' => 'downloads',
+            'book_id' => -800000,
+            'book_name' => 'Downloads',
+            'book_slug' => 'downloads',
+            'book_url' => '/downloads',
+            'chapter_id' => -800000,
+            'chapter_name' => 'Downloads',
+            'chapter_slug' => 'downloads',
+            'url_path' => '/downloads',
+            'html' => '',
+            'text_content' => '',
+            'description' => 'Available downloads.',
+            'updated_at' => '',
+        ],
+    ];
+
+    if (function_exists('downloads_scan')) {
+        $groups = downloads_group_by_category(downloads_scan($config));
+
+        $i = 1;
+
+        foreach ($groups as $group) {
+            $pages[] = [
+                'id' => -800000 - $i,
+                'source_key' => 'downloads',
+                'source_page_id' => 0,
+                'page_name' => (string)$group['name'],
+                'page_slug' => (string)$group['slug'],
+                'book_id' => -800000,
+                'book_name' => 'Downloads',
+                'book_slug' => 'downloads',
+                'book_url' => '/downloads',
+                'chapter_id' => -800000,
+                'chapter_name' => 'Downloads',
+                'chapter_slug' => 'downloads',
+                'url_path' => '/downloads/category/' . rawurlencode((string)$group['slug']),
+                'html' => '',
+                'text_content' => '',
+                'description' => 'Download category.',
+                'updated_at' => '',
+            ];
+
+            $i++;
+        }
+    }
+
+    return $pages;
+}
+
 /**
  * Return the pages that should be shown in the left documentation tree.
  *
@@ -229,7 +290,8 @@ if (!empty($config["doc_tree_show_all_books"])) {
     $pages = fetch_book_pages($pdo, $currentBookSlug);
 }
 
-return array_merge($pages, admin_tree_pages($config));
+//return array_merge($pages, admin_tree_pages($config));
+return array_merge($pages, download_tree_pages($config), admin_tree_pages($config));
 
 }
 

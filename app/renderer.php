@@ -479,9 +479,18 @@ function render_book_tree(array $pages, ?int $activePageId = null, array $active
         $html .= '<button type="button" class="tree-book-toggle" aria-label="Collapse or expand book" aria-expanded="true">';
         $html .= '<span class="tree-book-toggle-icon">▾</span>';
         $html .= '</button>';
-        $html .= '<a class="tree-book-title" href="/books/' . e($bookSlug) . '">';
-        $html .= e($bookName);
-        $html .= '</a>';
+//        $html .= '<a class="tree-book-title" href="/books/' . e($bookSlug) . '">';
+//        $html .= e($bookName);
+//        $html .= '</a>';
+$bookUrl = (string)($book['url'] ?? ('/books/' . $bookSlug));
+
+if ($bookUrl === '') {
+    $bookUrl = '/books/' . $bookSlug;
+}
+
+$html .= '<a class="tree-book-title" href="' . e($bookUrl) . '">';
+$html .= e($bookName);
+$html .= '</a>';
         $html .= '</div>';
         $html .= '<ul class="tree-book-chapters">';
 

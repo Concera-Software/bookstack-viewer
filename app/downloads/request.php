@@ -12,6 +12,22 @@ if (($_SERVER["REQUEST_METHOD"] ?? "GET") !== "POST") {
     exit();
 }
 
+$email = downloads_current_email($config);
+
+if ($email === '') {
+    http_response_code(403);
+
+    render_layout(
+        $config,
+        "Access required",
+        "Please log in first.",
+        '<div class="empty-state">Please log in before requesting a download.</div>',
+        $path
+    );
+
+    exit();
+}
+
 $key = trim((string)($_POST["file"] ?? ($_GET["file"] ?? "")));
 $download = downloads_find($config, $key);
 

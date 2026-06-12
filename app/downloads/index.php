@@ -6,6 +6,32 @@ if ($path !== "/downloads" && !str_starts_with($path, "/downloads/category/")) {
     return;
 }
 
+
+if (!downloads_access_is_verified($config)) {
+    $content = '<article class="doc-page">';
+    $content .= '<h1>Downloads</h1>';
+    $content .= '<p class="lead">Please request access to view available downloads.</p>';
+    $content .= '</article>';
+
+    $treePages = function_exists("fetch_tree_pages")
+        ? fetch_tree_pages($pdo, $config, "downloads")
+        : [];
+
+    $html = function_exists("render_split_documentation")
+        ? render_split_documentation($treePages, $content, -800000, [])
+        : $content;
+
+    render_layout(
+        $config,
+        "Downloads",
+        "Available downloads.",
+        $html,
+        $path
+    );
+
+    exit();
+}
+
 if (!downloads_enabled($config)) {
     http_response_code(404);
     render_layout($config, "Not found", "Page not found.", '<div class="empty-state">Page not found.</div>', $path);

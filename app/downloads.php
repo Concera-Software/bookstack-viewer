@@ -14,6 +14,23 @@ declare(strict_types=1);
  */
 
 /**
+ * Check whether the current visitor may view download lists and download info pages.
+ *
+ * Uses the same access gate as normal documentation pages.
+ *
+ * @param array $config
+ * @return bool
+ */
+function downloads_access_is_verified(array $config): bool
+{
+    if (!function_exists('access_gate_is_verified')) {
+        return true;
+    }
+
+    return access_gate_is_verified($config);
+}
+
+/**
  * Check whether downloads are enabled.
  *
  * @param array $config
@@ -85,6 +102,30 @@ function download_relative_path_is_safe(string $relative): bool
     }
 
     return (bool)preg_match('/^[a-zA-Z0-9_\-\/\. ]+$/', $relative);
+}
+
+function downloads_find_markdown_info_file(string $rootReal, string $dir, string $basename): ?string
+{
+    $mdCandidates = [
+        $basename . '.md',
+        $basename . '.MD',
+        $basename . '.Md',
+        $basename . '.mD',
+    ];
+
+    foreach ($mdCandidates as $mdFilename) {
+        $mdRelative = ($dir !== '' && $dir !== '/')
+            ? $dir . '/' . $mdFilename
+            : $mdFilename;
+
+        $candidatePath = $rootReal . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $mdRelative);
+
+        if (is_file($candidatePath)) {
+            return $candidatePath;
+        }
+    }
+
+    return null;
 }
 
 /**
@@ -166,9 +207,8 @@ function downloads_scan(array $config): array
 
         $filename = basename($relative);
         $basename = pathinfo($filename, PATHINFO_FILENAME);
-        $mdRelative = ($dir !== '' && $dir !== '/') ? $dir . '/' . $basename . '.md' : $basename . '.md';
-        $mdPath = $rootReal . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $mdRelative);
-        $hasInfo = is_file($mdPath);
+	$mdPath = downloads_find_markdown_info_file($rootReal, $dir, $basename);
+	$hasInfo = $mdPath !== null;
 
         $key = $relative;
 

@@ -1555,31 +1555,353 @@ body,
     min-width: 0;
 }
 
-/* Full row tooltip */
+
+/* Admin activity expandable rows */
+
+.admin-activity-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.admin-activity-table th,
+.admin-activity-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    vertical-align: top;
+    position: relative;
+}
+
+.admin-activity-table .admin-cell-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-activity-summary-row {
+    cursor: pointer;
+}
+
+.admin-activity-summary-row:hover td {
+    filter: brightness(0.98);
+}
+
+.admin-activity-summary-row.is-expanded td {
+    border-bottom-color: #94a3b8;
+}
+
+.admin-activity-detail-row td {
+    white-space: normal;
+    overflow: visible;
+    background: #f8fafc;
+    border-top: 0;
+}
+
+.admin-activity-detail-panel {
+    padding: 0.75rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+/*    background: #ffffff; */
+
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.admin-activity-detail-list {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 0.45rem 1rem;
+    margin: 0;
+}
+
+.admin-activity-detail-list dt {
+    font-weight: 800;
+    color: var(--heading);
+}
+
+.admin-activity-detail-list dd {
+    margin: 0;
+    color: var(--text);
+
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+/* Columns that must remain fully visible */
+.admin-activity-table .admin-activity-date {
+    width: 155px;
+}
+
+.admin-activity-table .admin-activity-email {
+    width: 220px;
+}
+
+.admin-activity-table .admin-activity-ip {
+    width: 135px;
+}
+
+.admin-activity-table .admin-activity-success {
+    width: 75px;
+}
+
+/* Optional columns may be clipped */
+.admin-activity-table .admin-activity-event {
+    width: 120px;
+}
+
+.admin-activity-table .admin-activity-message {
+    width: 180px;
+}
+
+.admin-activity-table .admin-activity-agent {
+    width: 220px;
+}
+
+/* Admin activity filters */
+
+.admin-activity-filter {
+    margin: 0.75rem 0 1rem;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel-soft);
+}
+
+.admin-activity-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 0.55rem 0.75rem;
+}
+
+.admin-activity-filter .admin-form-field {
+    gap: 0.2rem;
+}
+
+.admin-activity-filter .admin-form-field span {
+    font-size: 0.8rem;
+}
+
+.admin-activity-filter .admin-form-field input {
+    height: 34px;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.9rem;
+}
+
+.admin-activity-filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.65rem;
+}
+
+.admin-activity-filter-actions button,
+.admin-activity-filter-actions .button-link {
+    min-height: 34px;
+    height: 34px;
+    padding: 0 0.75rem;
+}
+
+/* Admin activity table */
+
+.admin-activity-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.admin-activity-table th,
+.admin-activity-table td {
+    white-space: nowrap;
+    overflow: visible;
+    vertical-align: top;
+    position: relative;
+}
+
+.admin-activity-table .admin-cell-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-activity-table .admin-activity-date {
+    width: 155px;
+}
+
+.admin-activity-table .admin-activity-email {
+    width: 220px;
+}
+
+.admin-activity-table .admin-activity-ip {
+    width: 135px;
+}
+
+.admin-activity-table .admin-activity-success {
+    width: 75px;
+}
+
+.admin-activity-table .admin-activity-event {
+    width: 120px;
+}
+
+.admin-activity-table .admin-activity-message {
+    width: 180px;
+}
+
+.admin-activity-table .admin-activity-agent {
+    width: 220px;
+}
+
 .admin-row-tooltip {
     display: none;
     position: fixed;
     left: 420px;
     top: 120px;
     z-index: 99999;
-
-    max-width: min(900px, 70vw);
+    max-width: min(920px, 70vw);
     max-height: 70vh;
     overflow: auto;
-
     padding: 0.85rem 1rem;
     border: 1px solid #94a3b8;
     border-radius: 6px;
     background: #111827;
     color: #ffffff;
-
     font-size: 0.86rem;
     line-height: 1.45;
     white-space: normal;
     box-shadow: 0 16px 48px rgba(15, 23, 42, 0.35);
 }
 
-/* Show the tooltip when hovering anywhere on the row */
 .admin-activity-table tbody tr:hover .admin-row-tooltip {
     display: block;
+}
+
+.admin-activity-load-status {
+    min-height: 1.5rem;
+    margin: 1rem 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 780px) {
+    .admin-activity-filter-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* Admin downloads table: same behavior as admin activity */
+
+.admin-download-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.admin-download-table th,
+.admin-download-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    vertical-align: top;
+    position: relative;
+}
+
+.admin-download-table .admin-cell-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-download-summary-row {
+    cursor: pointer;
+}
+
+.admin-download-summary-row:hover td {
+    filter: brightness(0.98);
+}
+
+.admin-download-summary-row.is-expanded td {
+    border-bottom-color: #94a3b8;
+}
+
+.admin-download-detail-row td {
+    white-space: normal;
+    overflow: visible;
+    background: #f8fafc;
+    border-top: 0;
+}
+
+.admin-download-detail-panel {
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 0.75rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+}
+
+.admin-download-detail-list {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 0.45rem 1rem;
+    margin: 0;
+}
+
+.admin-download-detail-list dt {
+    font-weight: 800;
+    color: var(--heading);
+}
+
+.admin-download-detail-list dd {
+    margin: 0;
+    color: var(--text);
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+/* Columns that must remain fully visible */
+.admin-download-table .admin-download-date {
+    width: 155px;
+}
+
+.admin-download-table .admin-download-email {
+    width: 220px;
+}
+
+.admin-download-table .admin-download-ip {
+    width: 135px;
+}
+
+.admin-download-table .admin-download-status {
+    width: 100px;
+}
+
+/* Optional columns may be clipped */
+.admin-download-table .admin-download-category {
+    width: 140px;
+}
+
+.admin-download-table .admin-download-file {
+    width: auto;
+}
+
+.admin-download-table .admin-download-verified {
+    width: 155px;
+}
+
+.admin-download-table .admin-download-downloaded {
+    width: 155px;
+}
+
+.admin-download-table .admin-download-failure {
+    width: 180px;
+}
+
+.admin-download-filter select {
+    height: 34px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: #ffffff;
+    padding: 0.35rem 0.55rem;
+    font: inherit;
+    font-size: 0.9rem;
 }

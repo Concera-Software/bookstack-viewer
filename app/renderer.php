@@ -5,6 +5,23 @@
 declare(strict_types=1);
 
 /**
+ * Return true when the normal access-gate overlay should be shown.
+ *
+ * @param string $canonicalPath
+ * @return bool
+ */
+function access_gate_overlay_enabled_for_path(string $canonicalPath): bool
+{
+    return (
+        str_starts_with($canonicalPath, '/books/') &&
+        str_contains($canonicalPath, '/page/')
+    )
+    || $canonicalPath === '/downloads'
+    || str_starts_with($canonicalPath, '/downloads/category/')
+    || str_starts_with($canonicalPath, '/downloads/info/');
+}
+
+/**
  * Render the main HTML layout.
  *
  * @param array $config
@@ -62,8 +79,19 @@ $accessVerified = function_exists('access_gate_is_verified')
     ? access_gate_is_verified($config)
     : true;
 
-$showAccessOverlay = str_starts_with($canonicalPath, '/books/')
-    && str_contains($canonicalPath, '/page/');
+//$showAccessOverlay = str_starts_with($canonicalPath, '/books/')
+//    && str_contains($canonicalPath, '/page/');
+
+//$showAccessOverlay =
+//    (
+//	str_starts_with($canonicalPath, '/books/') &&
+//        str_starts_with($canonicalPath, '/page/')
+//    )
+//    || $canonicalPath === '/downloads'
+//    || str_starts_with($canonicalPath, '/downloads/category/')
+//    || str_starts_with($canonicalPath, '/downloads/info/');
+
+    $showAccessOverlay = access_gate_overlay_enabled_for_path($canonicalPath);
 
 $bodyClasses = [];
 
@@ -93,7 +121,16 @@ echo '<body class="' . e(implode(' ', $bodyClasses)) . '">';
     echo '</main>';
     echo '</div>';
 
-$showAccessOverlay = str_contains($canonicalPath, '/page/');
+//    $showAccessOverlay = str_contains($canonicalPath, '/page/');
+    $showAccessOverlay = access_gate_overlay_enabled_for_path($canonicalPath);
+
+//    $showAccessOverlay =
+//      (
+//          str_contains($canonicalPath, '/page/')
+//      )
+//      || $canonicalPath === '/downloads'
+//      || str_starts_with($canonicalPath, '/downloads/category/')
+//      || str_starts_with($canonicalPath, '/downloads/info/');
 
 if (
     $showAccessOverlay &&

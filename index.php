@@ -193,9 +193,6 @@ if ($path === "/admin/users") {
     require __DIR__ . "/app/admin/users.php";
 }
 
-
-
-
 /*
  * Page cache only after access/admin/asset routes are handled.
  */
@@ -205,6 +202,13 @@ if (page_cache_try_serve($config, $path)) {
 
 page_cache_start($config, $path);
 
+if ($path === "/admin/downloads") {
+    require __DIR__ . "/app/admin/downloads.php";
+}
+
+if ($path === "/admin/activity") {
+    require __DIR__ . "/app/admin/activity.php";
+}
 
 if ($path === "/access/magic-login") {
     if (access_gate_verify_magic_token($pdo, $config)) {

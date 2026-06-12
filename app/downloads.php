@@ -3,6 +3,18 @@
 declare(strict_types=1);
 
 /**
+ * Download section helpers.
+ *
+ * Rules:
+ * - Only ZIP files are downloadable.
+ * - ZIP files inside a ".hidden" folder are ignored.
+ * - Optional Markdown info files use the same basename as the ZIP file.
+ * - Markdown info files may use .md, .MD, .Md, or .mD.
+ * - Download info pages use SEO-friendly URLs.
+ * - Actual downloads require a verified access-gate session and a download code.
+ */
+
+/**
  * Return a safe local return path.
  *
  * @param string $value
@@ -19,17 +31,6 @@ function downloads_safe_return_to(string $value, string $fallback = '/downloads'
 
     return $value;
 }
-
-/**
- * Download section.
- *
- * Rules:
- * - Only .zip files are downloadable.
- * - Optional markdown info files use the same basename as the ZIP file.
- * - Example:
- *   - downloads/tools/tool.zip
- *   - downloads/tools/tool.md
- */
 
 /**
  * Check whether the current visitor may view download lists and download info pages.
@@ -122,6 +123,14 @@ function download_relative_path_is_safe(string $relative): bool
     return (bool)preg_match('/^[a-zA-Z0-9_\-\/\. ]+$/', $relative);
 }
 
+/**
+ * Find an optional Markdown info file for a ZIP basename.
+ *
+ * @param string $rootReal
+ * @param string $dir
+ * @param string $basename
+ * @return ?string
+ */
 function downloads_find_markdown_info_file(string $rootReal, string $dir, string $basename): ?string
 {
     $mdCandidates = [
@@ -140,60 +149,6 @@ function downloads_find_markdown_info_file(string $rootReal, string $dir, string
 
         if (is_file($candidatePath)) {
             return $candidatePath;
-        }
-    }
-
-    return null;
-}
-
-/**
- * Scan downloads.
- *
- * Returns:
- * [
- *   [
- *     category => string,
- *     category_slug => string,
- *     title => string,
- *     filename => string,
- *     relative_path => string,
- *     download_url => string,
- *     info_url => ?string,
- *     md_path => ?string,
- *     size_bytes => int,
- *     updated_at => int,
- *   ]
- * ]
- *
- * @param array $config
- * @return array
- */
-
-
-
-/**
- * Find a download by public info URL slugs.
- *
- * @param array $config
- * @param string $categorySlug
- * @param string $infoSlug
- * @return ?array
- */
-function downloads_find_by_info_slug(array $config, string $categorySlug, string $infoSlug): ?array
-{
-    $categorySlug = trim($categorySlug);
-    $infoSlug = trim($infoSlug);
-
-    if ($categorySlug === '' || $infoSlug === '') {
-        return null;
-    }
-
-    foreach (downloads_scan($config) as $download) {
-        if (
-            (string)($download['category_slug'] ?? '') === $categorySlug &&
-            (string)($download['info_slug'] ?? '') === $infoSlug
-        ) {
-            return $download;
         }
     }
 
@@ -266,33 +221,27 @@ function downloads_scan(array $config): array
             continue;
         }
 
-        //$relative = str_replace('\\', '/', substr($fullPath, strlen($rootReal) + 1));
-        //
-        //if (!download_relative_path_is_safe($relative)) {
-        //    continue;
-        //}
+        $relative = str_replace('\\', '/', substr($fullPath, strlen($rootReal) + 1));
 
-$relative = str_replace('\\', '/', substr($fullPath, strlen($rootReal) + 1));
+        /*
+         * Never list or serve downloads from hidden folders.
+         *
+         * Any folder named ".hidden" anywhere below the downloads root is ignored.
+         *
+         * Examples:
+         * - downloads/.hidden/file.zip
+         * - downloads/tools/.hidden/file.zip
+         * - downloads/tools/.hidden/archive/file.zip
+         */
+        $relativeParts = explode('/', $relative);
 
-/*
- * Never list or serve downloads from hidden folders.
- *
- * Any folder named ".hidden" anywhere below the downloads root is ignored.
- *
- * Examples:
- * - downloads/.hidden/file.zip
- * - downloads/tools/.hidden/file.zip
- * - downloads/tools/.hidden/archive/file.zip
- */
-$relativeParts = explode('/', $relative);
+        if (in_array('.hidden', $relativeParts, true)) {
+            continue;
+        }
 
-if (in_array('.hidden', $relativeParts, true)) {
-    continue;
-}
-
-if (!download_relative_path_is_safe($relative)) {
-    continue;
-}
+        if (!download_relative_path_is_safe($relative)) {
+            continue;
+        }
 
         $dir = trim(str_replace('\\', '/', dirname($relative)), '.');
 
@@ -307,38 +256,7 @@ if (!download_relative_path_is_safe($relative)) {
 
         $filename = basename($relative);
         $basename = pathinfo($filename, PATHINFO_FILENAME);
-
-        /*
-         * Find an optional Markdown info file with the same basename.
-         *
-         * Supported examples:
-         * - file.md
-         * - file.MD
-         * - file.Md
-         * - file.mD
-         */
-        $mdPath = null;
-
-        $mdCandidates = [
-            $basename . '.md',
-            $basename . '.MD',
-            $basename . '.Md',
-            $basename . '.mD',
-        ];
-
-        foreach ($mdCandidates as $mdFilename) {
-            $mdRelative = ($dir !== '' && $dir !== '/')
-                ? $dir . '/' . $mdFilename
-                : $mdFilename;
-
-            $candidatePath = $rootReal . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $mdRelative);
-
-            if (is_file($candidatePath)) {
-                $mdPath = $candidatePath;
-                break;
-            }
-        }
-
+        $mdPath = downloads_find_markdown_info_file($rootReal, $dir, $basename);
         $hasInfo = $mdPath !== null;
 
         /*
@@ -379,7 +297,6 @@ if (!download_relative_path_is_safe($relative)) {
 
     return $items;
 }
-
 
 /**
  * Group downloads by category.
@@ -431,6 +348,35 @@ function downloads_find(array $config, string $key): ?array
 }
 
 /**
+ * Find a download by public info URL slugs.
+ *
+ * @param array $config
+ * @param string $categorySlug
+ * @param string $infoSlug
+ * @return ?array
+ */
+function downloads_find_by_info_slug(array $config, string $categorySlug, string $infoSlug): ?array
+{
+    $categorySlug = trim($categorySlug);
+    $infoSlug = trim($infoSlug);
+
+    if ($categorySlug === '' || $infoSlug === '') {
+        return null;
+    }
+
+    foreach (downloads_scan($config) as $download) {
+        if (
+            (string)($download['category_slug'] ?? '') === $categorySlug &&
+            (string)($download['info_slug'] ?? '') === $infoSlug
+        ) {
+            return $download;
+        }
+    }
+
+    return null;
+}
+
+/**
  * Basic markdown renderer for download info files.
  *
  * This keeps the feature dependency-free. For advanced markdown, replace this
@@ -462,6 +408,7 @@ function downloads_markdown_to_html(string $markdown): string
                 $html .= '</ul>';
                 $listOpen = false;
             }
+
             $html .= '<h3>' . htmlspecialchars($m[1], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</h3>';
             continue;
         }
@@ -471,6 +418,7 @@ function downloads_markdown_to_html(string $markdown): string
                 $html .= '</ul>';
                 $listOpen = false;
             }
+
             $html .= '<h2>' . htmlspecialchars($m[1], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</h2>';
             continue;
         }
@@ -480,6 +428,7 @@ function downloads_markdown_to_html(string $markdown): string
                 $html .= '</ul>';
                 $listOpen = false;
             }
+
             $html .= '<h1>' . htmlspecialchars($m[1], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</h1>';
             continue;
         }
@@ -489,6 +438,7 @@ function downloads_markdown_to_html(string $markdown): string
                 $html .= '<ul>';
                 $listOpen = true;
             }
+
             $html .= '<li>' . htmlspecialchars($m[1], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</li>';
             continue;
         }
@@ -530,6 +480,130 @@ function downloads_current_email(array $config): string
 }
 
 /**
+ * Create a permanent download-request audit row.
+ *
+ * This table is never cleaned up by the download-code cleanup.
+ *
+ * @param PDO $pdo
+ * @param array $download
+ * @param ?string $email
+ * @param string $status
+ * @param ?string $failureReason
+ * @return int
+ */
+function downloads_create_request_log(
+    PDO $pdo,
+    array $download,
+    ?string $email,
+    string $status = 'requested',
+    ?string $failureReason = null
+): int {
+    $ip = function_exists('access_gate_ip_address')
+        ? access_gate_ip_address()
+        : (string)($_SERVER['REMOTE_ADDR'] ?? '');
+
+    $userAgent = function_exists('access_gate_user_agent')
+        ? access_gate_user_agent()
+        : (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
+
+    $referer = function_exists('access_gate_referer')
+        ? access_gate_referer()
+        : (string)($_SERVER['HTTP_REFERER'] ?? '');
+
+    $stmt = $pdo->prepare("
+        INSERT INTO public_download_requests (
+            email,
+            download_key,
+            download_title,
+            filename,
+            category,
+            category_slug,
+            ip_address,
+            user_agent,
+            referer,
+            status,
+            code_sent_at,
+            failed_at,
+            failure_reason,
+            created_at
+        ) VALUES (
+            :email,
+            :download_key,
+            :download_title,
+            :filename,
+            :category,
+            :category_slug,
+            :ip_address,
+            :user_agent,
+            :referer,
+            :status,
+            CASE WHEN :status_code_sent = 1 THEN NOW() ELSE NULL END,
+            CASE WHEN :status_failed = 1 THEN NOW() ELSE NULL END,
+            :failure_reason,
+            NOW()
+        )
+    ");
+
+    $stmt->execute([
+        'email' => $email,
+        'download_key' => (string)($download['download_key'] ?? ''),
+        'download_title' => mb_substr((string)($download['title'] ?? ''), 0, 255),
+        'filename' => mb_substr((string)($download['filename'] ?? ''), 0, 255),
+        'category' => mb_substr((string)($download['category'] ?? ''), 0, 255),
+        'category_slug' => mb_substr((string)($download['category_slug'] ?? ''), 0, 255),
+        'ip_address' => mb_substr($ip, 0, 64),
+        'user_agent' => mb_substr($userAgent, 0, 512),
+        'referer' => mb_substr($referer, 0, 768),
+        'status' => mb_substr($status, 0, 32),
+        'status_code_sent' => $status === 'code_sent' ? 1 : 0,
+        'status_failed' => $status === 'failed' ? 1 : 0,
+        'failure_reason' => $failureReason !== null ? mb_substr($failureReason, 0, 255) : null,
+    ]);
+
+    return (int)$pdo->lastInsertId();
+}
+
+/**
+ * Update permanent download-request audit status.
+ *
+ * @param PDO $pdo
+ * @param int $requestId
+ * @param string $status
+ * @param ?string $failureReason
+ * @return void
+ */
+function downloads_update_request_log(
+    PDO $pdo,
+    int $requestId,
+    string $status,
+    ?string $failureReason = null
+): void {
+    if ($requestId <= 0) {
+        return;
+    }
+
+    $stmt = $pdo->prepare("
+        UPDATE public_download_requests
+        SET
+            status = :status,
+            verified_at = CASE WHEN :status_verified = 1 THEN NOW() ELSE verified_at END,
+            downloaded_at = CASE WHEN :status_downloaded = 1 THEN NOW() ELSE downloaded_at END,
+            failed_at = CASE WHEN :status_failed = 1 THEN NOW() ELSE failed_at END,
+            failure_reason = COALESCE(:failure_reason, failure_reason)
+        WHERE id = :id
+    ");
+
+    $stmt->execute([
+        'id' => $requestId,
+        'status' => mb_substr($status, 0, 32),
+        'status_verified' => $status === 'verified' ? 1 : 0,
+        'status_downloaded' => $status === 'downloaded' ? 1 : 0,
+        'status_failed' => $status === 'failed' ? 1 : 0,
+        'failure_reason' => $failureReason !== null ? mb_substr($failureReason, 0, 255) : null,
+    ]);
+}
+
+/**
  * Send a download verification code to the current user's email address.
  *
  * @param PDO $pdo
@@ -550,6 +624,21 @@ function downloads_send_code(PDO $pdo, array $config, array $download): bool
     $codeHash = hash('sha256', $code);
     $downloadKey = (string)$download['download_key'];
 
+    /*
+     * Permanent audit row. This stays forever.
+     */
+    $requestId = downloads_create_request_log(
+        $pdo,
+        $download,
+        $email,
+        'requested',
+        null
+    );
+
+    /*
+     * Only clean up temporary verification codes.
+     * Do not clean up public_download_requests.
+     */
     $cleanup = $pdo->prepare("
         DELETE FROM public_download_codes
         WHERE email = :email
@@ -566,6 +655,7 @@ function downloads_send_code(PDO $pdo, array $config, array $download): bool
         INSERT INTO public_download_codes (
             email,
             download_key,
+            download_request_id,
             code_hash,
             ip_address,
             user_agent,
@@ -576,6 +666,7 @@ function downloads_send_code(PDO $pdo, array $config, array $download): bool
         ) VALUES (
             :email,
             :download_key,
+            :download_request_id,
             :code_hash,
             :ip_address,
             :user_agent,
@@ -589,6 +680,7 @@ function downloads_send_code(PDO $pdo, array $config, array $download): bool
     $stmt->execute([
         'email' => $email,
         'download_key' => $downloadKey,
+        'download_request_id' => $requestId,
         'code_hash' => $codeHash,
         'ip_address' => function_exists('access_gate_ip_address') ? access_gate_ip_address() : ($_SERVER['REMOTE_ADDR'] ?? ''),
         'user_agent' => function_exists('access_gate_user_agent') ? access_gate_user_agent() : ($_SERVER['HTTP_USER_AGENT'] ?? ''),
@@ -618,10 +710,17 @@ function downloads_send_code(PDO $pdo, array $config, array $download): bool
     $html .= '</div></body></html>';
 
     if (!function_exists('smtp_send_mail_html')) {
+        downloads_update_request_log(
+            $pdo,
+            $requestId,
+            'failed',
+            'SMTP mail function is not available'
+        );
+
         return false;
     }
 
-    return smtp_send_mail_html(
+    $mailSent = smtp_send_mail_html(
         $config,
         $from,
         $fromName,
@@ -630,6 +729,21 @@ function downloads_send_code(PDO $pdo, array $config, array $download): bool
         $text,
         $html
     );
+
+    if ($mailSent) {
+        downloads_update_request_log($pdo, $requestId, 'code_sent');
+
+        return true;
+    }
+
+    downloads_update_request_log(
+        $pdo,
+        $requestId,
+        'failed',
+        'Could not send download code'
+    );
+
+    return false;
 }
 
 /**
@@ -639,14 +753,17 @@ function downloads_send_code(PDO $pdo, array $config, array $download): bool
  * @param array $config
  * @param array $download
  * @param string $code
- * @return bool
+ * @return array{ok: bool, request_id: int}
  */
-function downloads_verify_code(PDO $pdo, array $config, array $download, string $code): bool
+function downloads_verify_code(PDO $pdo, array $config, array $download, string $code): array
 {
     $email = downloads_current_email($config);
 
     if ($email === '' || !preg_match('/^[0-9]{6}$/', $code)) {
-        return false;
+        return [
+            'ok' => false,
+            'request_id' => 0,
+        ];
     }
 
     $stmt = $pdo->prepare("
@@ -668,11 +785,23 @@ function downloads_verify_code(PDO $pdo, array $config, array $download, string 
     $row = $stmt->fetch();
 
     if (!$row) {
-        return false;
+        return [
+            'ok' => false,
+            'request_id' => 0,
+        ];
     }
 
+    $requestId = (int)($row['download_request_id'] ?? 0);
+
     if ((int)($row['attempts'] ?? 0) >= 5) {
-        return false;
+        if ($requestId > 0) {
+            downloads_update_request_log($pdo, $requestId, 'failed', 'Too many invalid code attempts');
+        }
+
+        return [
+            'ok' => false,
+            'request_id' => $requestId,
+        ];
     }
 
     if (!hash_equals((string)$row['code_hash'], hash('sha256', $code))) {
@@ -686,7 +815,10 @@ function downloads_verify_code(PDO $pdo, array $config, array $download, string 
             'id' => (int)$row['id'],
         ]);
 
-        return false;
+        return [
+            'ok' => false,
+            'request_id' => $requestId,
+        ];
     }
 
     $update = $pdo->prepare("
@@ -699,7 +831,14 @@ function downloads_verify_code(PDO $pdo, array $config, array $download, string 
         'id' => (int)$row['id'],
     ]);
 
-    return true;
+    if ($requestId > 0) {
+        downloads_update_request_log($pdo, $requestId, 'verified');
+    }
+
+    return [
+        'ok' => true,
+        'request_id' => $requestId,
+    ];
 }
 
 /**

@@ -22,7 +22,9 @@ if (!$download) {
     exit();
 }
 
-if (!downloads_verify_code($pdo, $config, $download, $code)) {
+$verification = downloads_verify_code($pdo, $config, $download, $code);
+
+if (empty($verification['ok'])) {
     http_response_code(403);
     render_layout(
         $config,
@@ -50,14 +52,25 @@ if (
     exit();
 }
 
+$requestId = (int)($verification['request_id'] ?? 0);
+
+if ($requestId > 0) {
+    downloads_update_request_log($pdo, $requestId, 'downloaded');
+}
+
 if (function_exists("access_gate_log")) {
+
+    $logUrl = !empty($download['info_url'])
+       ? (string)$download['info_url']
+       : '/downloads';
+
     access_gate_log(
         $pdo,
         downloads_current_email($config),
         "download_file",
         true,
         "Downloaded " . (string)$download['download_key'],
-        "/downloads/info/" . rawurlencode((string)$download['download_key'])
+        $logUrl
     );
 }
 

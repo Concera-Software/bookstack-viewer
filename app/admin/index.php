@@ -48,6 +48,18 @@ $modules = [
         "url" => "/admin/users",
         "meta" => "Administrator access control",
     ],
+[
+    "name" => "Download audit",
+    "description" => "Read-only overview of all requested and executed downloads.",
+    "url" => "/admin/downloads",
+    "meta" => "Download audit log",
+],
+[
+    "name" => "User activity",
+    "description" => "Filter access activity by IP, date, date/time range, and URL.",
+    "url" => "/admin/activity",
+    "meta" => "Access activity log",
+],
 
 ];
 

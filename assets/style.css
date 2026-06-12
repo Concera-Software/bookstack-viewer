@@ -1474,6 +1474,8 @@ body,
     min-width: 260px;
 }
 
+/* Admin activity: fixed table width, no wrapping, truncate optional data */
+
 /* downloads css */
 /* Downloads */
 
@@ -1499,4 +1501,85 @@ body,
 .button-link:hover {
     border-color: var(--primary);
     text-decoration: none;
+}
+
+
+/* activity table */
+
+/* Admin activity: one-line rows, clipped optional columns, full row tooltip */
+
+.admin-activity-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.admin-activity-table th,
+.admin-activity-table td {
+    white-space: nowrap;
+    vertical-align: top;
+    position: relative;
+}
+
+/* Text clipping happens inside the span, not on the td.
+   This keeps the tooltip visible outside the cell. */
+.admin-activity-table .admin-cell-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Important columns */
+.admin-activity-table th:nth-child(1),
+.admin-activity-table td:nth-child(1) {
+    width: 155px; /* Date/time */
+}
+
+.admin-activity-table th:nth-child(3),
+.admin-activity-table td:nth-child(3) {
+    width: 220px; /* Email/user */
+}
+
+.admin-activity-table th:nth-child(4),
+.admin-activity-table td:nth-child(4) {
+    width: 135px; /* IP */
+}
+
+.admin-activity-table th:nth-child(6),
+.admin-activity-table td:nth-child(6) {
+    width: 75px; /* Success */
+}
+
+/* Optional columns are allowed to be clipped */
+.admin-activity-truncate {
+    min-width: 0;
+}
+
+/* Full row tooltip */
+.admin-row-tooltip {
+    display: none;
+    position: fixed;
+    left: 420px;
+    top: 120px;
+    z-index: 99999;
+
+    max-width: min(900px, 70vw);
+    max-height: 70vh;
+    overflow: auto;
+
+    padding: 0.85rem 1rem;
+    border: 1px solid #94a3b8;
+    border-radius: 6px;
+    background: #111827;
+    color: #ffffff;
+
+    font-size: 0.86rem;
+    line-height: 1.45;
+    white-space: normal;
+    box-shadow: 0 16px 48px rgba(15, 23, 42, 0.35);
+}
+
+/* Show the tooltip when hovering anywhere on the row */
+.admin-activity-table tbody tr:hover .admin-row-tooltip {
+    display: block;
 }

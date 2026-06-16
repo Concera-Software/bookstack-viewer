@@ -41,12 +41,24 @@ function page_cache_is_cacheable_request(array $config, string $path): bool
         return false;
     }
 
-    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-  
-    if (!in_array($method, ['GET', 'HEAD'], true)) {
-        header('X-Page-Cache: SKIP-METHOD');
-        return false;
-    }
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+if (!in_array($method, ['GET', 'HEAD'], true)) {
+    header('X-Page-Cache: SKIP-METHOD');
+    return false;
+}
+
+/*
+ * Do not serve from cache or write to cache for bots/crawlers.
+ *
+ * Bot requests may intentionally receive a different body state,
+ * for example access-granted instead of access-validate. That response
+ * must never be stored and later served to normal visitors.
+ */
+if (function_exists('request_looks_like_bot') && request_looks_like_bot()) {
+    header('X-Page-Cache: SKIP-BOT');
+    return false;
+}
 
     /*
      * Do not cache pages with query strings.

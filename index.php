@@ -373,8 +373,10 @@ if ($path === "/") {
 
     $html = '<section class="home-hero">';
     $html .= "<h1>" . e($config["app_name"] ?? "Documentation") . "</h1>";
-    $html .=
-        "<p>Browse public product documentation, manuals and troubleshooting guides.</p>";
+$html .= "<p>
+CoCoS Knowledgebase is the public documentation portal for CoCoS platform. Find here available documentation regarding configuration, installation, integration and troubleshooting information. This knowledgebase is created to help system integrators, engineers and technical users find practical answers when working with CoCoS environments, learn from case studies, configuration manuals and issues from the past. The documentation contains manuals, step-by-step guides, configuration examples, technical explanations, known issue descriptions and supporting downloads for CoCoS related products and integrations.
+</p>";
+
     $html .= "</section>";
 
     if (!$books) {
@@ -384,23 +386,22 @@ if ($path === "/") {
         $html .= '<section class="card-grid">';
 
         foreach ($books as $book) {
-            $html .= '<article class="book-card">';
-            $html .=
-                '<h2><a href="/books/' .
-                e($book["book_slug"]) .
-                '">' .
-                e($book["book_name"]) .
-                "</a></h2>";
-            $html .= "<p>" . (int) $book["page_count"] . " public pages</p>";
 
-            if (!empty($book["updated_at"])) {
-                $html .=
-                    '<span class="card-meta">Updated ' .
-                    e($book["updated_at"]) .
-                    "</span>";
-            }
+		$bookUrl = "/books/" . (string) $book["book_slug"];
 
-            $html .= "</article>";
+		$html .= '<a class="book-card book-card-link" href="' . e($bookUrl) . '">';
+		$html .= "<h2>" . e($book["book_name"]) . "</h2>";
+		$html .= "<p>" . (int) $book["page_count"] . " public pages</p>";
+
+		if (!empty($book["updated_at"])) {
+		    $html .=
+		        '<span class="card-meta">Updated ' .
+		        e($book["updated_at"]) .
+		        "</span>";
+		}
+
+		$html .= "</a>";
+
         }
 
 $showAdminTile =
@@ -408,20 +409,49 @@ $showAdminTile =
     can_access_admin_pages($config, null);
 
 if ($showAdminTile) {
-    $html .= '<article class="book-card admin-book-card">';
-    $html .= '<h2><a href="/admin">Admin</a></h2>';
-    $html .= '<p>administrative modules</p>';
-    $html .= '<span class="card-meta">Session management and hidden page controls</span>';
-    $html .= '</article>';
+	$html .= '<a class="book-card book-card-link admin-book-card" href="/admin">';
+	$html .= '<h2>Admin</h2>';
+	$html .= '<p>administrative modules</p>';
+	$html .= '<span class="card-meta">Session management and hidden page controls</span>';
+	$html .= '</a>';
 }
 
-        $html .= "</section>";
+$html .= '</section>';
+$html .= '<section class="home-intro-after-books">';
+
+$html .= "<h2>Where to apply CoCoS?</h2><p>
+
+CoCoS is often used in environments where Industrial hardware, IoT devices, HMI, intercom systems, SIP connections,
+need to work together reliably even when using different protocols like OPC, Modbus, ICX, ESPA444, HTTPS, etc. This
+wiki is create to inspire to implement custom designed configurations for every individual client. This knowledgebase
+brings public information together in one searchable place, so users can quickly find relevant articles about setup,
+maintenance, diagnostics, configuration choices and common problems.
+</p>
+";
+
+$html .= "<h2>Manual structure</h2><p>
+The documentation is organized into chapters and pages. Each chapter contains related information about a specific
+product, module, process or technical subject. Pages may describe how to configure features, how to connect external
+systems, how to solve operational issues, or how to understand specific behavior inside a CoCoS environment. Where
+applicable, articles can include screenshots, examples, warnings, explanations and references to related documentation.
+</p>";
+$html .= "<p>
+Use the documentation chapters to browse the available public CoCoS manuals and support articles. You can also use
+the search function to find specific terms, settings, error messages, configuration subjects or integration topics.
+This portal is continuously improved as new information becomes available, so it can serve as a practical starting
+point for anyone who needs reliable CoCoS documentation, installation guidance, configuration help or troubleshooting
+support.
+</p>
+";
+$html .= '</section>';
+
+
     }
 
     render_layout(
         $config,
         "Documentation",
-        "Browse public documentation.",
+        "Public CoCoS documentation, manuals, installation guides, configuration articles, troubleshooting information and downloads.",
         $html,
         "/"
     );
@@ -1160,6 +1190,6 @@ render_layout(
     $config,
     "Not found",
     "Page not found (Error 06).",
-    '<div class="empty-state">The requested page $path does not exist (Error 06).</div>',
+    '<div class="empty-state">The requested page '.$path.' does not exist (Error 06).</div>',
     $path
 );

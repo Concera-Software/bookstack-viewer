@@ -72,41 +72,36 @@ $description = function_exists('seo_meta_description')
         ],
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-echo '</script>';
-echo '</head>';
+    echo '</script>';
+    echo '</head>';
 
-$accessVerified = function_exists('access_gate_is_verified')
-    ? access_gate_is_verified($config)
-    : true;
-
-//$showAccessOverlay = str_starts_with($canonicalPath, '/books/')
-//    && str_contains($canonicalPath, '/page/');
-
-//$showAccessOverlay =
-//    (
-//	str_starts_with($canonicalPath, '/books/') &&
-//        str_starts_with($canonicalPath, '/page/')
-//    )
-//    || $canonicalPath === '/downloads'
-//    || str_starts_with($canonicalPath, '/downloads/category/')
-//    || str_starts_with($canonicalPath, '/downloads/info/');
+    $accessVerified = function_exists('access_gate_is_verified') ? access_gate_is_verified($config) : true;
 
     $showAccessOverlay = access_gate_overlay_enabled_for_path($canonicalPath);
 
-$bodyClasses = [];
+    $requestLooksLikeBot = function_exists('request_looks_like_bot') && request_looks_like_bot();
+    $bodyClasses = [];
 
-$bodyClasses[] = $accessVerified ? 'access-granted' : 'access-locked';
+    $bodyClasses[] = ($accessVerified || $requestLooksLikeBot) ? 'access-granted' : 'access-validate';
 
-if (!$showAccessOverlay) {
-    $bodyClasses[] = 'access-overlay-disabled';
-}
+    if (!$showAccessOverlay || $requestLooksLikeBot) {
+        $bodyClasses[] = 'access-allowed';
+    }
 
-echo '<body class="' . e(implode(' ', $bodyClasses)) . '">';
+    echo '<body class="' . e(implode(' ', $bodyClasses)) . '">';
+//    echo '<!-- renderinfo : accessVerified='.intval($accessVerified).', showAccessOverlay='.intval($showAccessOverlay).', looks like a bot: '.intval($requestLooksLikeBot).' -->';
 
     echo '<header class="site-header">';
     echo '<a class="brand" href="/" aria-label="' . e($appName) . '">';
-    echo '<img src="/assets/img/cocos-logo-knowledgebase.png" alt="' . e($appName) . ' logo">';
-    echo '<span>' . e($appName) . '</span>';
+//  echo '<img src="/assets/img/cocos-logo-knowledgebase.png" alt="' . e($appName) . ' logo">';
+
+echo '<picture class="brand-logo">';
+echo '<source media="(max-width: 350px)" srcset="/assets/img/cocos-logo-knowledgebase-micro.png">';
+echo '<source media="(max-width: 1280px)" srcset="/assets/img/cocos-logo-knowledgebase-small.png">';
+echo '<img src="/assets/img/cocos-logo-knowledgebase.png" alt="' . e($appName) . ' logo">';
+echo '</picture>';
+
+//    echo '<span>' . e($appName) . '</span>';
     echo '</a>';
 
     echo '<form class="search-form" action="/search" method="get">';
@@ -135,11 +130,15 @@ echo '<body class="' . e(implode(' ', $bodyClasses)) . '">';
 if (
     $showAccessOverlay &&
     !$accessVerified &&
-    function_exists('render_access_gate_overlay') &&
+    !$requestLooksLikeBot &&
     (!function_exists('request_looks_like_bot') || !request_looks_like_bot())
 ) {
     echo render_access_gate_overlay($config);
 }
+
+    $footerFile = __DIR__ . '/../assets/partials/footer.php';
+
+    if (is_file($footerFile)) { include $footerFile; }
 
     echo '</body>';
     echo '</html>';

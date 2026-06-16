@@ -905,7 +905,7 @@ if (preg_match('#^/books/([^/]+)/page/([^/]+)$#', $path, $match)) {
             $config,
             "Not found",
             "Page not found (Error 02).",
-            '<div class="empty-state">Page $path not found (Error 02).</div>',
+            '<div class="empty-state">Page '.$path.' not found (Error 02).</div>',
             $path
         );
         exit();
@@ -917,7 +917,7 @@ if (preg_match('#^/books/([^/]+)/page/([^/]+)$#', $path, $match)) {
             $config,
             "Not found",
             "Page not found (Error 03).",
-            '<div class="empty-state">Page $path not found (Error 03).</div>',
+            '<div class="empty-state">Page '.$path.' not found (Error 03).</div>',
             $path
         );
         exit();
@@ -1139,7 +1139,7 @@ if (preg_match('#^/pages/([^/]+)$#', $path, $match)) {
         $config,
         "Not found",
         "Page not found (Error 04).",
-        '<div class="empty-state">Page $path not found (Error 04).</div>',
+        '<div class="empty-state">Page '.$path.' not found (Error 04).</div>',
         $path
     );
     exit();

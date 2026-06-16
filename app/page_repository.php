@@ -128,6 +128,7 @@ function admin_tree_pages(array $config): array
     }
 
     return [
+
 [
     'id' => -900000,
     'source_key' => 'admin',
@@ -225,6 +226,7 @@ function admin_tree_pages(array $config): array
     'description' => 'Download audit log.',
     'updated_at' => '',
 ],
+
 [
     'id' => -900005,
     'source_key' => 'admin',
@@ -244,6 +246,7 @@ function admin_tree_pages(array $config): array
     'description' => 'User activity log.',
     'updated_at' => '',
 ],
+
 
     ];
 }
@@ -330,7 +333,7 @@ if (!empty($config["doc_tree_show_all_books"])) {
 }
 
 //return array_merge($pages, admin_tree_pages($config));
-return array_merge($pages, download_tree_pages($config), admin_tree_pages($config));
+return array_merge(admin_tree_pages($config), $pages, download_tree_pages($config));
 
 }
 

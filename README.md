@@ -37,4 +37,4 @@ none
 
 ## ORIGINATED
 
-The bookstack viewer was first developed for [Link Text](https://wiki.cocos.software)
+The bookstack viewer was first developed for [https://wiki.cocos.software](https://wiki.cocos.software).

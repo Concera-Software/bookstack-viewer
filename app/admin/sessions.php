@@ -65,17 +65,40 @@ if ($action === "delete_revoked_session") {
 }
 
 
-    if ($action === "block_ip") {
-        $ip = trim((string)($_POST["ip_address"] ?? ""));
-        $reason = trim((string)($_POST["reason"] ?? "Blocked from admin session manager"));
+if ($action === "block_ip") {
+    $ip = trim((string)($_POST["ip_address"] ?? ""));
+    $reason = trim((string)($_POST["reason"] ?? "Blocked from admin session manager"));
 
-        if ($ip !== "" && filter_var($ip, FILTER_VALIDATE_IP)) {
-            admin_block_ip($pdo, $ip, $reason, $adminEmail, $adminIp);
-        }
-
-        header("Location: " . $returnTo);
-        exit();
+    /*
+     * Prevent blocking your own current IP address.
+     * This avoids locking yourself out of the admin environment.
+     */
+    if (
+        $ip !== "" &&
+        filter_var($ip, FILTER_VALIDATE_IP) &&
+        $ip !== $adminIp
+    ) {
+        admin_block_ip($pdo, $ip, $reason, $adminEmail, $adminIp);
     }
+
+    header("Location: " . $returnTo);
+    exit();
+}
+
+if ($action === "unblock_ip") {
+    $ip = trim((string)($_POST["ip_address"] ?? ""));
+
+    if (
+        $ip !== "" &&
+        filter_var($ip, FILTER_VALIDATE_IP) &&
+        function_exists("admin_unblock_ip")
+    ) {
+        admin_unblock_ip($pdo, $ip);
+    }
+
+    header("Location: " . $returnTo);
+    exit();
+}
 
     http_response_code(400);
     echo "Invalid action";
@@ -186,12 +209,18 @@ if ($isRevoked) {
     $content .= '</form>';
 }
 
-        $content .= '<form method="post" class="inline-admin-form">';
-        $content .= '<input type="hidden" name="action" value="block_ip">';
-        $content .= '<input type="hidden" name="ip_address" value="' . e((string)$session["ip_address"]) . '">';
-        $content .= '<input type="hidden" name="reason" value="Blocked from session manager">';
-        $content .= '<button type="submit" class="danger-button">Block IP</button>';
-        $content .= '</form>';
+$sessionIp = (string)($session["ip_address"] ?? "");
+
+if ($sessionIp !== "" && $sessionIp !== $adminIp) {
+    $content .= '<form method="post" class="inline-admin-form">';
+    $content .= '<input type="hidden" name="action" value="block_ip">';
+    $content .= '<input type="hidden" name="ip_address" value="' . e($sessionIp) . '">';
+    $content .= '<input type="hidden" name="reason" value="Blocked from session manager">';
+    $content .= '<button type="submit" class="danger-button">Block IP</button>';
+    $content .= '</form>';
+} elseif ($sessionIp !== "") {
+    $content .= '<span class="card-meta">Own IP protected</span>';
+}
 
         $content .= '</td>';
         $content .= '</tr>';
@@ -216,18 +245,36 @@ if (!$blockedIps) {
     $content .= '<th>Blocked at</th>';
     $content .= '<th>Blocked by</th>';
     $content .= '<th>Blocked from IP</th>';
+    $content .= '<th>Actions</th>';
     $content .= '</tr>';
     $content .= '</thead>';
     $content .= '<tbody>';
 
     foreach ($blockedIps as $block) {
-        $content .= '<tr class="is-revoked">';
-        $content .= '<td><strong>' . e((string)$block["ip_address"]) . '</strong></td>';
-        $content .= '<td>' . e((string)($block["reason"] ?? "")) . '</td>';
-        $content .= '<td>' . e((string)($block["blocked_at"] ?? "")) . '</td>';
-        $content .= '<td>' . e((string)($block["blocked_by_email"] ?? "")) . '</td>';
-        $content .= '<td>' . e((string)($block["blocked_by_ip"] ?? "")) . '</td>';
-        $content .= '</tr>';
+
+	$blockedIp = (string)($block["ip_address"] ?? "");
+
+	$content .= '<tr class="is-revoked">';
+	$content .= '<td><strong>' . e($blockedIp) . '</strong></td>';
+	$content .= '<td>' . e((string)($block["reason"] ?? "")) . '</td>';
+	$content .= '<td>' . e((string)($block["blocked_at"] ?? "")) . '</td>';
+	$content .= '<td>' . e((string)($block["blocked_by_email"] ?? "")) . '</td>';
+	$content .= '<td>' . e((string)($block["blocked_by_ip"] ?? "")) . '</td>';
+	$content .= '<td>';
+
+	if ($blockedIp !== "" && $blockedIp !== $adminIp) {
+	    $content .= '<form method="post" class="inline-admin-form">';
+	    $content .= '<input type="hidden" name="action" value="unblock_ip">';
+	    $content .= '<input type="hidden" name="ip_address" value="' . e($blockedIp) . '">';
+	    $content .= '<button type="submit">Remove block</button>';
+	    $content .= '</form>';
+	} elseif ($blockedIp !== "") {
+	    $content .= '<span class="card-meta">Own IP protected</span>';
+	}
+
+	$content .= '</td>';
+	$content .= '</tr>';
+
     }
 
     $content .= '</tbody>';

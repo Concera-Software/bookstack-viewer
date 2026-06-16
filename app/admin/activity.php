@@ -109,6 +109,7 @@ if (
 header("X-Robots-Tag: noindex, nofollow, noarchive", true);
 
 $filterIp = trim((string)($_GET['ip'] ?? ''));
+$filterEmail = trim((string)($_GET['email'] ?? ''));
 $filterFrom = trim((string)($_GET['from'] ?? ''));
 $filterTo = trim((string)($_GET['to'] ?? ''));
 $filterUrl = trim((string)($_GET['url'] ?? ''));
@@ -123,6 +124,11 @@ $params = [];
 if ($filterIp !== '') {
     $where[] = 'ip_address = :ip_address';
     $params['ip_address'] = $filterIp;
+}
+
+if ($filterEmail !== '') {
+    $where[] = 'email LIKE :email';
+    $params['email'] = '%' . $filterEmail . '%';
 }
 
 if ($filterFrom !== '') {
@@ -197,6 +203,11 @@ $content .= '<div class="admin-activity-filter-grid">';
 $content .= '<label class="admin-form-field">';
 $content .= '<span>IP address</span>';
 $content .= '<input type="text" name="ip" value="' . e($filterIp) . '" placeholder="IP address">';
+$content .= '</label>';
+
+$content .= '<label class="admin-form-field">';
+$content .= '<span>Email</span>';
+$content .= '<input type="text" name="email" value="' . e($filterEmail) . '" placeholder="user@example.com">';
 $content .= '</label>';
 
 $content .= '<label class="admin-form-field">';

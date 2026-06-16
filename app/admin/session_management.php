@@ -149,6 +149,29 @@ function admin_revoke_session(PDO $pdo, string $sessionId, string $adminEmail, s
 }
 
 /**
+ * Remove an IP address from the block list.
+ *
+ * @param PDO $pdo
+ * @param string $ip
+ * @return void
+ */
+function admin_unblock_ip(PDO $pdo, string $ip): void
+{
+    if ($ip === '') {
+        return;
+    }
+
+    $stmt = $pdo->prepare("
+        DELETE FROM public_access_ip_blocks
+        WHERE ip_address = :ip_address
+    ");
+
+    $stmt->execute([
+        'ip_address' => $ip,
+    ]);
+}
+
+/**
  * Block an IP address.
  *
  * @param PDO $pdo

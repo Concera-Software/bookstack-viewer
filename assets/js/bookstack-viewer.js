@@ -64,7 +64,7 @@ function isKnownInteractiveBrowser() {
     const userAgent = navigator.userAgent || '';
 
     const knownBrowser = /Chrome|CriOS|Firefox|FxiOS|Safari|Edg|OPR|Opera/i.test(userAgent);
-    const knownBot = /bot|crawler|spider|slurp|bingpreview|google|bing|yandex|duckduck|baidu|semrush|ahrefs|mj12|curl|wget|python|php|validator|lighthouse|pagespeed/i.test(userAgent);
+    const knownBot = /bot|applebot|crawler|spider|slurp|bingpreview|google|bing|yandex|duckduck|baidu|semrush|ahrefs|mj12|curl|wget|python|php|validator|lighthouse|pagespeed/i.test(userAgent);
 
     if (!knownBrowser || knownBot) {
         return false;

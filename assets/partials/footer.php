@@ -12,8 +12,8 @@
 		<a href="https://cocos.software" rel="noopener">https://concera.com</a>
             </p>
 	    <p>
-		Created with Bookstack Viewer:
-		<a href="https://github.com/Concera-Software/bookstack-viewer" target="_new">https://github.com/Concera-Software/bookstack-viewer</a>
+		Wiki created with Bookstack Viewer:<br />
+		<a href="https://github.com/Concera-Software/bookstack-viewer" target="_new">https://github.com/bookstack-viewer</a>
         </section>
 
         <section class="site-footer-column">

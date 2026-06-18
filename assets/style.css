@@ -2080,3 +2080,95 @@ body,
     flex-shrink: 0;
     margin-top: auto;
 }
+
+.admin-session-audit-table,
+.admin-session-block-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.admin-session-audit-table {
+    table-layout: fixed;
+}
+
+/* Logged in sessions table */
+.admin-session-audit-table th:nth-child(1),
+.admin-session-audit-table td:nth-child(1) {
+    width: 90px; /* Status, about 55px narrower */
+}
+
+.admin-session-audit-table th:nth-child(2),
+.admin-session-audit-table td:nth-child(2) {
+    width: 190px; /* Email */
+}
+
+.admin-session-audit-table th:nth-child(3),
+.admin-session-audit-table td:nth-child(3) {
+    width: 120px; /* IP address, about 80px narrower */
+}
+
+.admin-session-audit-table th:nth-child(4),
+.admin-session-audit-table td:nth-child(4) {
+    width: 160px; /* Last seen */
+}
+
+.admin-session-audit-table th:nth-child(5),
+.admin-session-audit-table td:nth-child(5) {
+    width: 160px; /* Expires */
+}
+
+/*
+.admin-session-audit-table th:nth-child(6),
+.admin-session-audit-table td:nth-child(6) {
+    width: auto; /* User agent gets remaining space */
+}
+*/
+
+.admin-session-audit-table th:nth-child(7),
+.admin-session-audit-table td:nth-child(7) {
+    width: 180px; /* Actions, at least 100px wider */
+}
+
+.admin-session-audit-table th,
+.admin-session-audit-table td,
+.admin-session-block-table th,
+.admin-session-block-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    vertical-align: top;
+    position: relative;
+}
+
+.admin-session-audit-table .admin-cell-text,
+.admin-session-block-table .admin-cell-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-activity-summary-row[data-session-toggle] {
+    cursor: pointer;
+}
+
+.admin-activity-summary-row[data-session-toggle]:hover td {
+    filter: brightness(0.98);
+}
+
+.admin-activity-summary-row[data-session-toggle].is-expanded td {
+    border-bottom-color: #94a3b8;
+}
+
+.admin-session-audit-table .inline-admin-form,
+.admin-session-block-table .inline-admin-form {
+    display: inline-block;
+    margin: 0 0.25rem 0.25rem 0;
+}
+
+.admin-session-audit-table button,
+.admin-session-block-table button {
+    height: 30px;
+    min-height: 30px;
+    padding: 0 0.55rem;
+    font-size: 0.82rem;
+}

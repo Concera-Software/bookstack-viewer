@@ -6,6 +6,14 @@ declare(strict_types=1);
  * Route: Admin session management.
  *
  * Shows access sessions and blocked IP addresses.
+ *
+ * Features:
+ * - admin-only access;
+ * - filters by IP address and email;
+ * - prevents blocking your own current IP address;
+ * - allows removing an IP address from the blocklist;
+ * - uses the same expandable table layout as user activity and download audit;
+ * - clicking a summary row expands a detail row directly underneath it.
  */
 
 if ($path !== "/admin/sessions") {
@@ -14,6 +22,10 @@ if ($path !== "/admin/sessions") {
 
 /**
  * Render session rows.
+ *
+ * Each session is rendered as:
+ * - one summary row;
+ * - one hidden detail row.
  *
  * @param array $sessions
  * @param string $currentSessionId
@@ -45,6 +57,7 @@ function admin_sessions_render_rows(array $sessions, string $currentSessionId, s
             $rowClass = "is-expired";
         } elseif ($isCurrent) {
             $status = "Current";
+            $rowClass = "is-active";
         }
 
         $email = (string)($session["email"] ?? "");
@@ -58,15 +71,15 @@ function admin_sessions_render_rows(array $sessions, string $currentSessionId, s
 
         $rowId = "session-details-" . substr(md5($sessionId . json_encode($session)), 0, 12);
 
-        $content .= '<tr class="admin-session-summary-row ' . e($rowClass) . '" data-session-toggle="' . e($rowId) . '">';
-        $content .= '<td><span class="admin-cell-text"><strong>' . e($status) . '</strong></span></td>';
-        $content .= '<td><span class="admin-cell-text">' . e($email) . '</span></td>';
-        $content .= '<td><span class="admin-cell-text">' . e($ip) . '</span></td>';
-        $content .= '<td><span class="admin-cell-text">' . e($lastSeenAt) . '</span></td>';
-        $content .= '<td><span class="admin-cell-text">' . e($expiresAt) . '</span></td>';
-        $content .= '<td><span class="admin-cell-text">' . e($userAgent) . '</span></td>';
+        $content .= '<tr class="admin-activity-summary-row ' . e($rowClass) . '" data-session-toggle="' . e($rowId) . '">';
+        $content .= '<td class="admin-activity-event"><span class="admin-cell-text"><strong>' . e($status) . '</strong></span></td>';
+        $content .= '<td class="admin-activity-email"><span class="admin-cell-text">' . e($email) . '</span></td>';
+        $content .= '<td class="admin-activity-ip"><span class="admin-cell-text">' . e($ip) . '</span></td>';
+        $content .= '<td class="admin-activity-date"><span class="admin-cell-text">' . e($lastSeenAt) . '</span></td>';
+        $content .= '<td class="admin-activity-date"><span class="admin-cell-text">' . e($expiresAt) . '</span></td>';
+        $content .= '<td class="admin-activity-agent"><span class="admin-cell-text">' . e($userAgent) . '</span></td>';
 
-        $content .= '<td>';
+        $content .= '<td class="admin-activity-message">';
 
         if (!$isRevoked && !$isCurrent) {
             $content .= '<form method="post" class="inline-admin-form">';
@@ -91,17 +104,18 @@ function admin_sessions_render_rows(array $sessions, string $currentSessionId, s
             $content .= '<input type="hidden" name="reason" value="Blocked from session manager">';
             $content .= '<button type="submit" class="danger-button">Block IP</button>';
             $content .= '</form>';
-        } elseif ($ip !== '') {
-            $content .= '<span class="card-meta">Own IP protected</span>';
-        }
+        } 
+//        elseif ($ip !== '') {
+//            $content .= '<span class="card-meta">Own IP protected</span>';
+//        }
 
         $content .= '</td>';
         $content .= '</tr>';
 
-        $content .= '<tr id="' . e($rowId) . '" class="admin-session-detail-row" hidden>';
+        $content .= '<tr id="' . e($rowId) . '" class="admin-activity-detail-row" hidden>';
         $content .= '<td colspan="7">';
-        $content .= '<div class="admin-session-detail-panel">';
-        $content .= '<dl class="admin-session-detail-list">';
+        $content .= '<div class="admin-activity-detail-panel">';
+        $content .= '<dl class="admin-activity-detail-list">';
         $content .= '<dt>Session ID</dt><dd>' . e($sessionId) . '</dd>';
         $content .= '<dt>Status</dt><dd>' . e($status) . '</dd>';
         $content .= '<dt>Email</dt><dd>' . e($email) . '</dd>';
@@ -125,6 +139,10 @@ function admin_sessions_render_rows(array $sessions, string $currentSessionId, s
 /**
  * Render blocked IP rows.
  *
+ * Each blocked IP is rendered as:
+ * - one summary row;
+ * - one hidden detail row.
+ *
  * @param array $blockedIps
  * @param string $adminIp
  * @return string
@@ -143,13 +161,13 @@ function admin_blocked_ips_render_rows(array $blockedIps, string $adminIp): stri
 
         $rowId = "blocked-ip-details-" . substr(md5($ip . json_encode($block)), 0, 12);
 
-        $content .= '<tr class="admin-session-summary-row is-revoked" data-session-toggle="' . e($rowId) . '">';
-        $content .= '<td><span class="admin-cell-text"><strong>' . e($ip) . '</strong></span></td>';
-        $content .= '<td><span class="admin-cell-text">' . e($reason) . '</span></td>';
-        $content .= '<td><span class="admin-cell-text">' . e($blockedAt) . '</span></td>';
-        $content .= '<td><span class="admin-cell-text">' . e($blockedByEmail) . '</span></td>';
+        $content .= '<tr class="admin-activity-summary-row is-revoked" data-session-toggle="' . e($rowId) . '">';
+        $content .= '<td class="admin-activity-ip"><span class="admin-cell-text"><strong>' . e($ip) . '</strong></span></td>';
+        $content .= '<td class="admin-activity-message"><span class="admin-cell-text">' . e($reason) . '</span></td>';
+        $content .= '<td class="admin-activity-date"><span class="admin-cell-text">' . e($blockedAt) . '</span></td>';
+        $content .= '<td class="admin-activity-email"><span class="admin-cell-text">' . e($blockedByEmail) . '</span></td>';
 
-        $content .= '<td>';
+        $content .= '<td class="admin-activity-message">';
 
         if ($ip !== '' && $ip !== $adminIp) {
             $content .= '<form method="post" class="inline-admin-form">';
@@ -164,10 +182,10 @@ function admin_blocked_ips_render_rows(array $blockedIps, string $adminIp): stri
         $content .= '</td>';
         $content .= '</tr>';
 
-        $content .= '<tr id="' . e($rowId) . '" class="admin-session-detail-row" hidden>';
+        $content .= '<tr id="' . e($rowId) . '" class="admin-activity-detail-row" hidden>';
         $content .= '<td colspan="5">';
-        $content .= '<div class="admin-session-detail-panel">';
-        $content .= '<dl class="admin-session-detail-list">';
+        $content .= '<div class="admin-activity-detail-panel">';
+        $content .= '<dl class="admin-activity-detail-list">';
         $content .= '<dt>IP address</dt><dd>' . e($ip) . '</dd>';
         $content .= '<dt>Reason</dt><dd>' . e($reason) . '</dd>';
         $content .= '<dt>Blocked at</dt><dd>' . e($blockedAt) . '</dd>';
@@ -240,6 +258,10 @@ if (($_SERVER["REQUEST_METHOD"] ?? "GET") === "POST") {
         $ip = trim((string)($_POST["ip_address"] ?? ""));
         $reason = trim((string)($_POST["reason"] ?? "Blocked from admin session manager"));
 
+        /*
+         * Prevent blocking your own current IP address.
+         * This avoids locking yourself out of the admin environment.
+         */
         if (
             $ip !== "" &&
             filter_var($ip, FILTER_VALIDATE_IP) &&
@@ -370,7 +392,7 @@ if (!$sessions) {
     $content .= '<div class="empty-state">No tracked sessions found for the selected filter.</div>';
 } else {
     $content .= '<div class="admin-table-wrap">';
-    $content .= '<table class="admin-session-table admin-session-audit-table">';
+    $content .= '<table class="admin-session-table admin-activity-table admin-session-audit-table">';
     $content .= '<thead>';
     $content .= '<tr>';
     $content .= '<th>Status</th>';
@@ -395,7 +417,7 @@ if (!$blockedIps) {
     $content .= '<div class="empty-state">No blocked IP addresses found.</div>';
 } else {
     $content .= '<div class="admin-table-wrap">';
-    $content .= '<table class="admin-session-table admin-session-block-table">';
+    $content .= '<table class="admin-session-table admin-activity-table admin-session-block-table">';
     $content .= '<thead>';
     $content .= '<tr>';
     $content .= '<th>IP address</th>';

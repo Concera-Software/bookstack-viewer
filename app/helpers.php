@@ -167,7 +167,7 @@ function request_looks_like_bot(): bool
     }
 
     return (bool)preg_match(
-        '/bot|crawler|spider|slurp|bingpreview|google|bing|yandex|duckduck|baidu|semrush|ahrefs|mj12|curl|wget|python|php|validator|lighthouse|pagespeed/i',
+        '/bot|applebot|claudebot|crawler|spider|slurp|bingpreview|google|bing|yandex|duckduck|baidu|semrush|ahrefs|mj12|curl|wget|python|php|validator|lighthouse|pagespeed/i',
         $userAgent
     );
 }

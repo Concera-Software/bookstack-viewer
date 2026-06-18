@@ -133,7 +133,7 @@ function admin_tree_pages(array $config): array
     'id' => -900000,
     'source_key' => 'admin',
     'source_page_id' => 0,
-    'page_name' => 'Admin',
+    'page_name' => 'All Administrative pages',
     'page_slug' => 'admin',
     'book_id' => -900001,
     'book_name' => 'Admin',
@@ -148,6 +148,7 @@ function admin_tree_pages(array $config): array
     'description' => 'Admin overview.',
     'updated_at' => '',
 ],
+
         [
             'id' => -900001,
             'source_key' => 'admin',
@@ -246,6 +247,27 @@ function admin_tree_pages(array $config): array
     'description' => 'User activity log.',
     'updated_at' => '',
 ],
+
+[
+    'id' => -900105,
+    'source_key' => 'admin',
+    'source_page_id' => 0,
+    'page_name' => 'Log out',
+    'page_slug' => 'Log out',
+    'book_id' => -900001,
+    'book_name' => 'admin',
+    'book_slug' => 'admin',
+    'book_url' => '/admin',
+    'chapter_id' => -900001,
+    'chapter_name' => 'Administration',
+    'chapter_slug' => 'administration',
+    'url_path' => '/access/logout',
+    'html' => '',
+    'text_content' => '',
+    'description' => 'Log Out',
+    'updated_at' => '',
+],
+
 
 
     ];

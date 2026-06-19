@@ -5,11 +5,19 @@
   </url>
   <url>
     <loc>https://wiki.cocos.software/books/cocos</loc>
-    <lastmod>2026-06-11T11:35:56+00:00</lastmod>
+    <lastmod>2026-06-19T10:57:30+00:00</lastmod>
   </url>
   <url>
     <loc>https://wiki.cocos.software/books/hardware</loc>
-    <lastmod>2026-04-29T12:21:28+00:00</lastmod>
+    <lastmod>2026-06-19T10:43:34+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://wiki.cocos.software/books/cocos/page/verifying-script-functionality</loc>
+    <lastmod>2026-06-19T10:57:30+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://wiki.cocos.software/books/hardware/page/after-some-time-the-commend-intercom-goes-out-of-operation-and-displays-a-red-illuminated-dial-button</loc>
+    <lastmod>2026-06-19T10:43:34+00:00</lastmod>
   </url>
   <url>
     <loc>https://wiki.cocos.software/books/cocos/page/system-requirements</loc>
@@ -137,10 +145,6 @@
   </url>
   <url>
     <loc>https://wiki.cocos.software/books/cocos/page/sip-intercom-appears-registered-but-is-not-available-in-cocos</loc>
-    <lastmod>2026-03-12T09:12:46+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://wiki.cocos.software/books/cocos/page/verifying-script-functionality</loc>
     <lastmod>2026-03-12T09:12:46+00:00</lastmod>
   </url>
   <url>

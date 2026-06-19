@@ -31,10 +31,13 @@ elif [[ "${1:-}" == "--block" ]]; then
 fi
 
 # number of errors before triggering an block/report action
-THRESHOLD=100
+THRESHOLD=200
 
 # number of day's an ip is blocked.
 BAN_HOURS=120
+
+# maximum number of user agents per ip
+MAX_LOGGED_USER_AGENTS=5
 
 # HTTP status codes to count.
 # Add or remove codes as needed.
@@ -80,10 +83,14 @@ LOG_FILES=(
     "/var/log/apache2/other_vhosts_access.log"
 )
 
+PERMANENT_BLOCK_FILE="/var/www/bookstack-viewer/enabled/app/permanent-ip-blocks.txt"
+
 STATE_DIR="/var/www/bookstack-viewer/enabled/tmp"
 STATE_FILE="${STATE_DIR}/temporary-blocks.tsv"
-PERMANENT_BLOCK_FILE="/var/www/bookstack-viewer/enabled/app/permanent-ip-blocks.txt"
-LOCK_FILE="/run/apache-404-autoblock.lock"
+BLOCK_LOG_FILE="${STATE_DIR}/blocked-useragents.log"
+BLOCK_APPLY_SCRIPT="${STATE_DIR}/apply-ip-blocks.sh"
+IPTABLES_CHAIN_NAME="COCOS_AUTO_BLOCK"
+LOCK_FILE="/run/security-autoblock-ip.lock"
 
 # Add trusted IP addresses here. These will never be blocked.
 WHITELIST=(
@@ -200,10 +207,20 @@ block_ip() {
     local ip="$1"
     local backend="$2"
     local reason="$3"
+    local user_agents="${4:-}"
 
     if is_whitelisted "$ip"; then
         echo "SKIP-WHITELIST: $ip"
         return 0
+    fi
+
+    # Keep firewall comments short and single-line.
+    # iptables comments should not be too long.
+    local firewall_comment
+    firewall_comment="$(printf '%s' "$user_agents" | tr '\t\r\n' '   ' | sed 's/  */ /g' | cut -c 1-180)"
+
+    if [[ -z "$firewall_comment" ]]; then
+        firewall_comment="$reason"
     fi
 
     case "$backend" in
@@ -211,8 +228,8 @@ block_ip() {
             ufw deny from "$ip" comment "$reason"
             ;;
         iptables)
-            iptables -C INPUT -s "$ip" -j DROP 2>/dev/null || \
-                iptables -I INPUT -s "$ip" -j DROP
+            iptables -C INPUT -s "$ip" -m comment --comment "$firewall_comment" -j DROP 2>/dev/null || \
+                iptables -I INPUT -s "$ip" -m comment --comment "$firewall_comment" -j DROP
             ;;
         *)
             echo "No supported firewall backend found. Cannot block $ip." >&2
@@ -391,6 +408,116 @@ scan_user_agent_abuse() {
     ' "${files[@]}"
 }
 
+recent_user_agents_for_ip() {
+    local search_ip="$1"
+    local max_items="${2:-5}"
+
+    mapfile -t files < <(existing_log_files)
+
+    if (( ${#files[@]} == 0 )); then
+        return 0
+    fi
+
+    awk -v search_ip="$search_ip" -v max_items="$max_items" '
+        $1 == search_ip {
+            ua = ""
+            rest = $0
+
+            # Apache combined/vhost logs normally contain quoted fields:
+            # "REQUEST" STATUS SIZE "REFERER" "USER-AGENT"
+            # This loop keeps the last quoted field, which is usually user-agent.
+            while (match(rest, /"[^"]*"/)) {
+                ua = substr(rest, RSTART + 1, RLENGTH - 2)
+                rest = substr(rest, RSTART + RLENGTH)
+            }
+
+            if (ua != "" && seen[ua] != 1) {
+                seen[ua] = 1
+                agents[++count] = ua
+            }
+        }
+
+        END {
+            for (i = 1; i <= count && i <= max_items; i++) {
+                print agents[i]
+            }
+        }
+    ' "${files[@]}"
+}
+
+sanitize_log_field() {
+    tr '\t\r\n' '   ' | sed 's/  */ /g'
+}
+
+log_block_event() {
+    local ip="$1"
+    local count="$2"
+    local reason="$3"
+    local mode="$4"
+    local block_type="$5"
+    local user_agents="$6"
+
+    mkdir -p "$(dirname "$BLOCK_LOG_FILE")"
+
+    {
+        printf '%s\t' "$(date -Is)"
+        printf '%s\t' "$mode"
+        printf '%s\t' "$block_type"
+        printf '%s\t' "$ip"
+        printf '%s\t' "$count"
+        printf '%s\t' "$(printf '%s' "$reason" | sanitize_log_field)"
+        printf '%s\n' "$(printf '%s' "$user_agents" | sanitize_log_field)"
+    } >> "$BLOCK_LOG_FILE"
+}
+
+initialize_block_apply_script() {
+    mkdir -p "$(dirname "$BLOCK_APPLY_SCRIPT")"
+
+    cat > "$BLOCK_APPLY_SCRIPT" <<EOF
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+CHAIN="${IPTABLES_CHAIN_NAME}"
+
+# Create the chain if it does not exist.
+iptables -N "\$CHAIN" 2>/dev/null || true
+
+# Make sure INPUT jumps to the chain.
+iptables -C INPUT -j "\$CHAIN" 2>/dev/null || iptables -I INPUT -j "\$CHAIN"
+
+EOF
+
+    chmod +x "$BLOCK_APPLY_SCRIPT"
+}
+
+append_ip_block_to_apply_script() {
+    local ip="$1"
+    local reason="$2"
+    local user_agents="${3:-}"
+
+    mkdir -p "$(dirname "$BLOCK_APPLY_SCRIPT")"
+
+    local firewall_comment
+    firewall_comment="$(printf '%s' "$user_agents" | tr '\t\r\n' '   ' | sed 's/  */ /g' | cut -c 1-180)"
+
+    if [[ -z "$firewall_comment" ]]; then
+        firewall_comment="$(printf '%s' "$reason" | tr '\t\r\n' '   ' | sed 's/  */ /g' | cut -c 1-180)"
+    fi
+
+    cat >> "$BLOCK_APPLY_SCRIPT" <<EOF
+
+# Block ${ip}
+# Reason: ${reason}
+# User-Agent: ${firewall_comment}
+iptables -C "\$CHAIN" -s "${ip}" -m comment --comment "${firewall_comment}" -j DROP 2>/dev/null || \\
+    iptables -A "\$CHAIN" -s "${ip}" -m comment --comment "${firewall_comment}" -j DROP
+EOF
+
+    chmod +x "$BLOCK_APPLY_SCRIPT"
+}
+
+
 handle_candidate_block() {
     local ip="$1"
     local count="$2"
@@ -411,8 +538,18 @@ handle_candidate_block() {
         return 0
     fi
 
+    local user_agents
+    user_agents="$(recent_user_agents_for_ip "$ip" "$MAX_LOGGED_USER_AGENTS" | paste -sd ' | ' -)"
+
+    if [[ -z "$user_agents" ]]; then
+        user_agents="No user-agent found in configured log files"
+    fi
+
     if [[ "$MODE" == "report" ]]; then
         echo "REPORT: $ip would be blocked. Count: $count. Reason: $reason"
+        echo "REPORT: $ip user-agent(s): $user_agents"
+
+        log_block_event "$ip" "$count" "$reason" "report" "$permanent" "$user_agents"
         return 0
     fi
 
@@ -421,8 +558,12 @@ handle_candidate_block() {
         exit 1
     fi
 
-    echo "Blocking $ip. Count: $count. Reason: $reason"
-    block_ip "$ip" "$backend" "$reason"
+    echo "Preparing block for $ip. Count: $count. Reason: $reason"
+    echo "Blocked user-agent(s) for $ip: $user_agents"
+
+    log_block_event "$ip" "$count" "$reason" "block" "$permanent" "$user_agents"
+
+    append_ip_block_to_apply_script "$ip" "$reason" "$user_agents"
 
     if [[ "$permanent" != "yes" ]]; then
         local until

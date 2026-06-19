@@ -48,6 +48,13 @@ $modules = [
         "url" => "/admin/users",
         "meta" => "Administrator access control",
     ],
+    [
+        "name" => "Public users",
+        "description" => "Manage registered public users.",
+        "url" => "/admin/public-users",
+        "meta" => "Public user management",
+    ],
+
 [
     "name" => "Download audit",
     "description" => "Read-only overview of all requested and executed downloads.",

@@ -2190,3 +2190,165 @@ body,
 .profile-form-actions {
     margin-top: 1.5rem;
 }
+
+.button-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 0 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--panel);
+    color: inherit;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.button-link:hover,
+.button-link:focus {
+    text-decoration: none;
+    filter: brightness(0.98);
+}
+
+.small-button-link {
+    min-height: 30px;
+    padding: 0 0.55rem;
+    font-size: 0.82rem;
+}
+
+.secondary-button-link {
+    margin-left: 0.5rem;
+}
+
+.admin-users-table {
+    table-layout: fixed;
+}
+
+.admin-users-table th:nth-child(1),
+.admin-users-table td:nth-child(1) {
+    width: 110px;
+}
+
+.admin-users-table th:nth-child(2),
+.admin-users-table td:nth-child(2) {
+    width: 260px;
+}
+
+.admin-users-table th:nth-child(3),
+.admin-users-table td:nth-child(3) {
+    width: auto;
+}
+
+.admin-users-table td:nth-child(4) {
+    white-space: nowrap;
+    text-align: right;
+}
+
+.admin-users-table th:nth-child(4),
+.admin-users-table td:nth-child(4) {
+    width: 180px;
+    text-align: right;
+}
+
+.admin-users-table td:nth-child(4) .button-link,
+.admin-users-table td:nth-child(4) .danger-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 68px;
+    min-width: 68px;
+    height: 30px; 
+    min-height: 30px; 
+    padding: 0;
+    box-sizing: border-box;
+    font-size: 0.82rem;
+    line-height: 1;
+}
+
+.admin-users-table td:nth-child(4) .inline-admin-form {
+    display: inline-flex;
+    margin-left: 0.35rem;
+    margin-right: 0;
+    vertical-align: middle;
+}
+
+.admin-users-table .inline-admin-form {
+    display: inline-block;
+    margin-left: 0.35rem;
+}
+
+.admin-activity-summary-row[data-admin-user-toggle] {
+    cursor: pointer;
+}
+
+.admin-activity-summary-row[data-admin-user-toggle].is-expanded td {
+    border-bottom-color: #94a3b8;
+}
+
+.admin-detail-ip-list {
+    margin: 0;
+}
+
+
+.admin-public-users-table {
+    table-layout: fixed;
+}
+
+.admin-public-users-table th:nth-child(1),
+.admin-public-users-table td:nth-child(1) {
+    width: 100px;
+}
+
+.admin-public-users-table th:nth-child(2),
+.admin-public-users-table td:nth-child(2) {
+    width: 260px;
+}
+
+.admin-public-users-table th:nth-child(3),
+.admin-public-users-table td:nth-child(3) {
+    width: 180px;
+}
+
+.admin-public-users-table th:nth-child(4),
+.admin-public-users-table td:nth-child(4) {
+    width: 150px;
+}
+
+.admin-public-users-table th:nth-child(5),
+.admin-public-users-table td:nth-child(5) {
+    width: 90px;
+}
+
+.admin-public-users-table th:nth-child(6),
+.admin-public-users-table td:nth-child(6) {
+    width: 170px;
+}
+
+.admin-public-users-table th:nth-child(7),
+.admin-public-users-table td:nth-child(7) {
+    width: 110px;
+    text-align: right;
+}
+
+.admin-public-users-table td:nth-child(7) {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.admin-public-users-table td:nth-child(7) .button-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 68px;
+    min-width: 68px;
+    height: 32px;
+    min-height: 32px;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-size: 0.82rem;
+    line-height: 1;
+}

@@ -86,44 +86,81 @@ $users = function_exists("admin_users_all")
     ? admin_users_all($pdo)
     : [];
 
+$formMode = trim((string)($_GET["action"] ?? ""));
+$editEmail = trim((string)($_GET["edit"] ?? ""));
+
+$showForm = $formMode === "add" || $editEmail !== "";
+$editingUser = null;
+
+if ($editEmail !== "" && function_exists("admin_user_by_email")) {
+    $editingUser = admin_user_by_email($pdo, $editEmail);
+}
+
+$formEmail = (string)($editingUser["email"] ?? "");
+$formIpText = (string)($editingUser["ip_addresses"] ?? "");
+$formNotes = (string)($editingUser["notes"] ?? "");
+$formEnabled = $editingUser ? ((int)($editingUser["is_enabled"] ?? 0) === 1) : true;
+
 $content = '<article class="doc-page">';
 $content .= '<h1>Admin users</h1>';
 $content .= '<p class="lead">Manage administrator email addresses and bind each administrator to one or more IP addresses.</p>';
 
 $content .= '<div class="empty-state">';
-$content .= '<strong>Rule:</strong> When an email address exists here, this database entry overrules the same admin user in app/config.php.';
+$content .= '<strong>Rule:</strong> When an email address exists here, this database entry overrules the same admin user defined in the app configuration.';
 $content .= '</div>';
 
 if ($error !== '') {
     $content .= '<div class="empty-state">' . e($error) . '</div>';
 }
 
-$content .= '<h2>Add or update admin user</h2>';
-$content .= '<form method="post" class="admin-user-form">';
-$content .= '<input type="hidden" name="action" value="save_admin_user">';
+$content .= '<p>';
+$content .= '<a class="button-link" href="/admin/users?action=add">Add admin user</a>';
+$content .= '</p>';
 
-$content .= '<label class="admin-form-field">';
-$content .= '<span>Email address</span>';
-$content .= '<input type="email" name="email" required placeholder="admin@example.com">';
-$content .= '</label>';
+if ($showForm) {
+    $content .= '<h2>' . ($editingUser ? 'Edit admin user' : 'Add admin user') . '</h2>';
 
-$content .= '<label class="admin-form-field">';
-$content .= '<span>Allowed IP addresses</span>';
-$content .= '<textarea name="ip_addresses" rows="5" required placeholder="One IP per line"></textarea>';
-$content .= '</label>';
+    if ($editEmail !== "" && !$editingUser) {
+        $content .= '<div class="empty-state">Admin user not found.</div>';
+    } else {
+        $content .= '<form method="post" class="admin-user-form">';
+        $content .= '<input type="hidden" name="action" value="save_admin_user">';
 
-$content .= '<label class="admin-form-field">';
-$content .= '<span>Notes</span>';
-$content .= '<input type="text" name="notes" maxlength="255" placeholder="Optional note">';
-$content .= '</label>';
+        $content .= '<label class="admin-form-field">';
+        $content .= '<span>Email address</span>';
 
-$content .= '<label class="admin-check-field">';
-$content .= '<input type="checkbox" name="is_enabled" value="1" checked>';
-$content .= '<span>Enabled</span>';
-$content .= '</label>';
+        if ($editingUser) {
+            $content .= '<input type="email" name="email" required readonly value="' . e($formEmail) . '">';
+            $content .= '<small>The email address is the admin identity and cannot be changed here.</small>';
+        } else {
+            $content .= '<input type="email" name="email" required placeholder="admin@example.com">';
+        }
 
-$content .= '<button type="submit">Save admin user</button>';
-$content .= '</form>';
+        $content .= '</label>';
+
+        $content .= '<label class="admin-form-field">';
+        $content .= '<span>Allowed IP addresses</span>';
+        $content .= '<textarea name="ip_addresses" rows="5" required placeholder="One IP per line">' . e($formIpText) . '</textarea>';
+        $content .= '</label>';
+
+        $content .= '<label class="admin-form-field">';
+        $content .= '<span>Notes</span>';
+        $content .= '<input type="text" name="notes" maxlength="255" value="' . e($formNotes) . '" placeholder="Optional note">';
+        $content .= '</label>';
+
+        $content .= '<label class="admin-check-field">';
+        $content .= '<input type="checkbox" name="is_enabled" value="1"' . ($formEnabled ? " checked" : "") . '>';
+        $content .= '<span>Enabled</span>';
+        $content .= '</label>';
+
+        $content .= '<div class="profile-form-actions">';
+        $content .= '<button type="submit">Save admin user</button>';
+        $content .= ' <a class="button-link secondary-button-link" href="/admin/users">Cancel</a>';
+        $content .= '</div>';
+
+        $content .= '</form>';
+    }
+}
 
 $content .= '<h2>Configured admin users</h2>';
 
@@ -131,46 +168,38 @@ if (!$users) {
     $content .= '<div class="empty-state">No database admin users found. The system is using app/config.php fallback admins.</div>';
 } else {
     $content .= '<div class="admin-table-wrap">';
-    $content .= '<table class="admin-session-table">';
+    $content .= '<table class="admin-session-table admin-activity-table admin-users-table">';
     $content .= '<thead>';
     $content .= '<tr>';
     $content .= '<th>Status</th>';
     $content .= '<th>Email</th>';
     $content .= '<th>Allowed IP addresses</th>';
-    $content .= '<th>Notes</th>';
-    $content .= '<th>Updated</th>';
     $content .= '<th>Actions</th>';
     $content .= '</tr>';
     $content .= '</thead>';
     $content .= '<tbody>';
 
     foreach ($users as $user) {
+        $id = (int)($user["id"] ?? 0);
         $email = (string)($user["email"] ?? "");
         $enabled = (int)($user["is_enabled"] ?? 0) === 1;
         $ipText = (string)($user["ip_addresses"] ?? "");
         $notes = (string)($user["notes"] ?? "");
+        $createdAt = (string)($user["created_at"] ?? "");
         $updatedAt = (string)($user["updated_at"] ?? "");
+        $updatedByEmail = (string)($user["updated_by_email"] ?? "");
+        $updatedByIp = (string)($user["updated_by_ip"] ?? "");
 
-        $content .= '<tr class="' . e($enabled ? "is-active" : "is-revoked") . '">';
-        $content .= '<td><strong>' . e($enabled ? "Enabled" : "Disabled") . '</strong></td>';
-        $content .= '<td>' . e($email) . '</td>';
+        $rowId = 'admin-user-detail-' . preg_replace('/[^a-zA-Z0-9_-]+/', '-', $email);
+        $rowClass = $enabled ? "is-active" : "is-revoked";
+
+        $content .= '<tr class="admin-activity-summary-row ' . e($rowClass) . '" data-admin-user-toggle="' . e($rowId) . '">';
+        $content .= '<td><span class="admin-cell-text"><strong>' . e($enabled ? "Enabled" : "Disabled") . '</strong></span></td>';
+        $content .= '<td><span class="admin-cell-text">' . e($email) . '</span></td>';
         $content .= '<td><pre class="admin-ip-list">' . e($ipText) . '</pre></td>';
-        $content .= '<td>' . e($notes) . '</td>';
-        $content .= '<td>' . e($updatedAt) . '</td>';
 
         $content .= '<td>';
-
-        $content .= '<details class="admin-inline-editor">';
-        $content .= '<summary>Edit</summary>';
-        $content .= '<form method="post" class="inline-admin-form admin-inline-form">';
-        $content .= '<input type="hidden" name="action" value="save_admin_user">';
-        $content .= '<input type="hidden" name="email" value="' . e($email) . '">';
-        $content .= '<textarea name="ip_addresses" rows="5" required>' . e($ipText) . '</textarea>';
-        $content .= '<input type="text" name="notes" maxlength="255" value="' . e($notes) . '">';
-        $content .= '<label><input type="checkbox" name="is_enabled" value="1"' . ($enabled ? " checked" : "") . '> Enabled</label>';
-        $content .= '<button type="submit">Save</button>';
-        $content .= '</form>';
-        $content .= '</details>';
+        $content .= '<a class="button-link small-button-link" href="/admin/users?edit=' . e(rawurlencode($email)) . '">Edit</a>';
 
         $content .= '<form method="post" class="inline-admin-form">';
         $content .= '<input type="hidden" name="action" value="delete_admin_user">';
@@ -180,11 +209,89 @@ if (!$users) {
 
         $content .= '</td>';
         $content .= '</tr>';
+
+        $content .= '<tr id="' . e($rowId) . '" class="admin-activity-detail-row" hidden>';
+        $content .= '<td colspan="4">';
+        $content .= '<div class="admin-activity-detail-panel">';
+        $content .= '<dl class="admin-activity-detail-list">';
+
+        $content .= '<dt>ID</dt>';
+        $content .= '<dd>' . e((string)$id) . '</dd>';
+
+        $content .= '<dt>Email</dt>';
+        $content .= '<dd>' . e($email) . '</dd>';
+
+        $content .= '<dt>Status</dt>';
+        $content .= '<dd>' . e($enabled ? "Enabled" : "Disabled") . '</dd>';
+
+        $content .= '<dt>Allowed IP addresses</dt>';
+        $content .= '<dd><pre class="admin-ip-list admin-detail-ip-list">' . e($ipText) . '</pre></dd>';
+
+        $content .= '<dt>Notes</dt>';
+        $content .= '<dd>' . e($notes !== '' ? $notes : '-') . '</dd>';
+
+        $content .= '<dt>Created</dt>';
+        $content .= '<dd>' . e($createdAt !== '' ? $createdAt : '-') . '</dd>';
+
+        $content .= '<dt>Updated</dt>';
+        $content .= '<dd>' . e($updatedAt !== '' ? $updatedAt : '-') . '</dd>';
+
+        $content .= '<dt>Updated by email</dt>';
+        $content .= '<dd>' . e($updatedByEmail !== '' ? $updatedByEmail : '-') . '</dd>';
+
+        $content .= '<dt>Updated by IP</dt>';
+        $content .= '<dd>' . e($updatedByIp !== '' ? $updatedByIp : '-') . '</dd>';
+
+        $content .= '</dl>';
+        $content .= '</div>';
+        $content .= '</td>';
+        $content .= '</tr>';
     }
 
     $content .= '</tbody>';
     $content .= '</table>';
     $content .= '</div>';
+
+    $content .= <<<'HTML'
+<script>
+(function () {
+    function bindAdminUserRowToggle(root) {
+        root.querySelectorAll("[data-admin-user-toggle]").forEach(function (row) {
+            if (row.dataset.boundAdminUserToggle === "1") {
+                return;
+            }
+
+            row.dataset.boundAdminUserToggle = "1";
+
+            row.addEventListener("click", function (event) {
+                if (event.target.closest("button, a, input, textarea, form, summary")) {
+                    return;
+                }
+
+                var targetId = row.getAttribute("data-admin-user-toggle");
+                var detailRow = document.getElementById(targetId);
+
+                if (!detailRow) {
+                    return;
+                }
+
+                var isHidden = detailRow.hasAttribute("hidden");
+
+                if (isHidden) {
+                    detailRow.removeAttribute("hidden");
+                    row.classList.add("is-expanded");
+                } else {
+                    detailRow.setAttribute("hidden", "hidden");
+                    row.classList.remove("is-expanded");
+                }
+            });
+        });
+    }
+
+    bindAdminUserRowToggle(document);
+})();
+</script>
+HTML;
 }
 
 $content .= '</article>';

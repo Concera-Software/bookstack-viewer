@@ -169,7 +169,7 @@ function admin_tree_pages(array $config): array
             'updated_at' => '',
         ],
 [
-    'id' => -900002,
+    'id' => -900020,
     'source_key' => 'admin',
     'source_page_id' => 0,
     'page_name' => 'Session management',
@@ -189,7 +189,7 @@ function admin_tree_pages(array $config): array
 ],
 
 [
-    'id' => -900003,
+    'id' => -900030,
     'source_key' => 'admin',
     'source_page_id' => 0,
     'page_name' => 'Admin users',
@@ -209,7 +209,28 @@ function admin_tree_pages(array $config): array
 ],
 
 [
-    'id' => -900004,
+    'id' => -900040,
+    'source_key' => 'admin',
+    'source_page_id' => 0,
+    'page_name' => 'Public users',
+    'page_slug' => 'public-users',
+    'book_id' => -900001,
+    'book_name' => 'Admin',
+    'book_slug' => 'admin',
+    'book_url' => '/admin',
+    'chapter_id' => -900001,
+    'chapter_name' => 'Administration',
+    'chapter_slug' => 'administration',
+    'url_path' => '/admin/public-users',
+    'html' => '',
+    'text_content' => '',
+    'description' => 'Manage admin users.',
+    'updated_at' => '',
+],
+
+
+[
+    'id' => -900050,
     'source_key' => 'admin',
     'source_page_id' => 0,
     'page_name' => 'Download audit',
@@ -229,7 +250,7 @@ function admin_tree_pages(array $config): array
 ],
 
 [
-    'id' => -900005,
+    'id' => -900060,
     'source_key' => 'admin',
     'source_page_id' => 0,
     'page_name' => 'User activity',
@@ -249,7 +270,7 @@ function admin_tree_pages(array $config): array
 ],
 
 [
-    'id' => -900105,
+    'id' => -900070,
     'source_key' => 'admin',
     'source_page_id' => 0,
     'page_name' => 'Log out',

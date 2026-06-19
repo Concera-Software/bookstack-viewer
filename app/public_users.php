@@ -129,6 +129,40 @@ function public_user_get_by_email(PDO $pdo, string $email): ?array
     return $row ?: null;
 }
 
+function public_user_is_enabled(PDO $pdo, string $email): bool
+{
+    $email = public_user_normalize_email($email);
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
+
+    $stmt = $pdo->prepare("
+        SELECT is_enabled
+        FROM public_users
+        WHERE email = :email
+        LIMIT 1
+    ");
+
+    $stmt->execute([
+        'email' => $email,
+    ]);
+
+    $row = $stmt->fetch();
+
+    /*
+     * New users are allowed.
+     *
+     * If the email address does not exist yet, it should be allowed to request
+     * a first code. public_user_ensure() will create the public user record.
+     */
+    if (!$row) {
+        return true;
+    }
+
+    return (int)($row['is_enabled'] ?? 0) === 1;
+}
+
 function public_user_update_profile(
     PDO $pdo,
     string $email,

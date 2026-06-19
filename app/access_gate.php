@@ -484,6 +484,24 @@ function access_gate_request_code(PDO $pdo, array $config): array
     $email = (string)$validation['email'];
     $ttl = max(1, (int)($config['access_gate_code_ttl_minutes'] ?? 10));
 
+    if (
+        function_exists('public_user_is_enabled') &&
+        !public_user_is_enabled($pdo, $email)
+    ) {
+        access_gate_log(
+            $pdo,
+            $email,
+            'code_request_failed',
+            false,
+            'Public user is disabled'
+        );
+    
+        return [
+            'ok' => false,
+            'message' => 'Your account is disabled. Please contact support.',
+        ];
+    }
+
     if (function_exists('public_user_ensure')) {
 	    public_user_ensure(
 	        $pdo,

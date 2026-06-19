@@ -194,6 +194,11 @@ if ($path === "/admin/users") {
     require __DIR__ . "/app/admin/users.php";
 }
 
+if ($path === "/admin/public-users") {
+    require __DIR__ . "/app/admin/public_users.php";
+}
+
+
 /**
  * Route : Ussers
  **/

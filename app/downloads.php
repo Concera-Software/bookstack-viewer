@@ -619,6 +619,22 @@ function downloads_send_code(PDO $pdo, array $config, array $download): bool
         return false;
     }
 
+    if (
+	function_exists('public_user_is_enabled') &&
+	!public_user_is_enabled($pdo, $email)
+    ) {
+	if (function_exists('downloads_create_request_log')) {
+		downloads_create_request_log(
+			$pdo,
+			$download,
+			$email,
+			'failed',
+			'Public user is disabled'
+		);
+	}
+		return false;
+    }
+
     if (function_exists('public_user_ensure')) {
         public_user_ensure(
             $pdo,

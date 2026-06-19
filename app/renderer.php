@@ -108,6 +108,12 @@ echo '</picture>';
     echo '<input name="q" type="search" placeholder="Search documentation" aria-label="Search documentation">';
     echo '<button type="submit">Search</button>';
     echo '</form>';
+
+if (function_exists('access_gate_is_verified') && access_gate_is_verified($config)) {
+	echo '<a href="/profile" class="nav-link">My profile</a>';
+}
+
+
     echo '</header>';
 
     echo '<div class="page-shell">';
@@ -463,6 +469,7 @@ function render_book_tree(array $pages, ?int $activePageId = null, array $active
     }
 
     $html = '<aside class="doc-tree">';
+
     $html .= '<div class="tree-title"><a href="/">Documentation</a></div>';
 
     $html .= '<nav aria-label="Documentation navigation">';

@@ -619,6 +619,16 @@ function downloads_send_code(PDO $pdo, array $config, array $download): bool
         return false;
     }
 
+    if (function_exists('public_user_ensure')) {
+        public_user_ensure(
+            $pdo,
+            $email,
+            'download_code_requested',
+            function_exists('access_gate_ip_address') ? access_gate_ip_address() : (string)($_SERVER['REMOTE_ADDR'] ?? ''),
+            function_exists('access_gate_user_agent') ? access_gate_user_agent() : (string)($_SERVER['HTTP_USER_AGENT'] ?? '')
+        );
+    }
+
     $ttl = max(1, (int)($config['download_code_ttl_minutes'] ?? 10));
     $code = (string)random_int(100000, 999999);
     $codeHash = hash('sha256', $code);

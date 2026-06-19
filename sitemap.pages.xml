@@ -5,7 +5,11 @@
   </url>
   <url>
     <loc>https://wiki.cocos.software/books/cocos</loc>
-    <lastmod>2026-06-19T10:57:30+00:00</lastmod>
+    <lastmod>2026-06-19T12:48:29+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://wiki.cocos.software/books/cocos-manual</loc>
+    <lastmod>2026-06-19T09:22:41+00:00</lastmod>
   </url>
   <url>
     <loc>https://wiki.cocos.software/books/hardware</loc>
@@ -13,15 +17,15 @@
   </url>
   <url>
     <loc>https://wiki.cocos.software/books/cocos/page/verifying-script-functionality</loc>
-    <lastmod>2026-06-19T10:57:30+00:00</lastmod>
+    <lastmod>2026-06-19T12:48:29+00:00</lastmod>
   </url>
   <url>
     <loc>https://wiki.cocos.software/books/hardware/page/after-some-time-the-commend-intercom-goes-out-of-operation-and-displays-a-red-illuminated-dial-button</loc>
     <lastmod>2026-06-19T10:43:34+00:00</lastmod>
   </url>
   <url>
-    <loc>https://wiki.cocos.software/books/cocos/page/system-requirements</loc>
-    <lastmod>2026-06-11T11:35:56+00:00</lastmod>
+    <loc>https://wiki.cocos.software/books/cocos-manual/page/cocos-server-scripting</loc>
+    <lastmod>2026-06-19T09:22:41+00:00</lastmod>
   </url>
   <url>
     <loc>https://wiki.cocos.software/books/cocos/page/setup-2n-intercom-for-dailing-via-cocos-call-handling-button0</loc>
@@ -70,10 +74,6 @@
   <url>
     <loc>https://wiki.cocos.software/books/cocos/page/how-to-install-ubuntu-2404lts-for-cocos</loc>
     <lastmod>2026-04-28T08:51:25+00:00</lastmod>
-  </url>
-  <url>
-    <loc>https://wiki.cocos.software/books/cocos/page/sent-data-could-not-be-applied-onto-this-device</loc>
-    <lastmod>2026-04-23T07:59:43+00:00</lastmod>
   </url>
   <url>
     <loc>https://wiki.cocos.software/books/cocos/page/how-to-control-a-relay-on-a-commend-et908h-sip-using-a-cocos-script</loc>
@@ -174,5 +174,25 @@
   <url>
     <loc>https://wiki.cocos.software/books/cocos/page/troubleshooting-tls-transport-registration-issues-in-intercom</loc>
     <lastmod>2025-09-19T15:33:57+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://wiki.cocos.software/books/cocos-manual/page/cocos-scripting-php</loc>
+    <lastmod>2025-09-15T08:32:18+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://wiki.cocos.software/books/cocos-manual/page/release-notes-cocos-v5026</loc>
+    <lastmod>2025-09-12T14:40:00+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://wiki.cocos.software/books/cocos-manual/page/release-notes-cocos-v510</loc>
+    <lastmod>2025-09-12T10:34:46+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://wiki.cocos.software/books/cocos-manual/page/system-requirements</loc>
+    <lastmod>2025-09-12T10:05:22+00:00</lastmod>
+  </url>
+  <url>
+    <loc>https://wiki.cocos.software/books/cocos-manual/page/recommendations</loc>
+    <lastmod>2025-07-10T14:07:20+00:00</lastmod>
   </url>
 </urlset>

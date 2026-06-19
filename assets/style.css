@@ -1,4 +1,4 @@
-/* version 1.0.14 */
+/* version 1.0.15 */
 
 :root {
     --bg: #f4f6f8;
@@ -309,6 +309,10 @@ button:hover {
     margin-bottom: 0;
 }
 
+
+.nav-link {
+    color: #FFFFFF;
+}
 
 /* Documentation split */
 
@@ -2171,4 +2175,18 @@ body,
     min-height: 30px;
     padding: 0 0.55rem;
     font-size: 0.82rem;
+}
+
+.profile-success-message {
+    margin: 0 0 1.25rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid #86efac;
+    border-radius: var(--radius);
+    background: #dcfce7;
+    color: #166534;
+    font-weight: 700;
+}
+
+.profile-form-actions {
+    margin-top: 1.5rem;
 }

@@ -484,6 +484,16 @@ function access_gate_request_code(PDO $pdo, array $config): array
     $email = (string)$validation['email'];
     $ttl = max(1, (int)($config['access_gate_code_ttl_minutes'] ?? 10));
 
+    if (function_exists('public_user_ensure')) {
+	    public_user_ensure(
+	        $pdo,
+	        $email,
+	        'login_code_requested',
+	        access_gate_ip_address(),
+	        access_gate_user_agent()
+	    );
+    }
+
     /**
      * Manual login code.
      */

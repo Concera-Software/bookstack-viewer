@@ -57,6 +57,7 @@ require __DIR__ . "/app/page_repository.php";
 require __DIR__ . "/app/asset_proxy.php";
 require __DIR__ . "/app/link_rewriter.php";
 require __DIR__ . "/app/downloads.php";
+require __DIR__ . "/app/public_users.php";
 
 // admin includes
 require __DIR__ . "/app/admin/session_management.php";
@@ -191,6 +192,14 @@ if ($path === "/admin/sessions") {
 
 if ($path === "/admin/users") {
     require __DIR__ . "/app/admin/users.php";
+}
+
+/**
+ * Route : Ussers
+ **/
+
+if ($path === "/profile") {
+    require __DIR__ . "/app/profile.php";
 }
 
 /*
